@@ -2,42 +2,24 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const bcrypt = require('bcryptjs');
 const session = require('express-session');
-const { Octokit } = require('@octokit/rest');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// GitHub configuration
-const GITHUB_OWNER = 'Securedlinks';
-const GITHUB_REPO = 'coldbind-script-host';
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN || 'your-github-token-here';
-
-const octokit = new Octokit({
-    auth: GITHUB_TOKEN,
-});
 
 // Session configuration
 app.use(session({
     secret: 'coldbind-secret-key-change-in-production',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false } // Set to true in production with HTTPS
+    cookie: { secure: false }
 }));
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Serve static files from public directory for login/dashboard
-app.use('/public', express.static('public'));
-
-// Serve static files from root (CSS, JS, images) for main app
-app.use(express.static('.', { 
-    index: false,
-    dotfiles: 'deny'
-}));
+app.use(express.static('public'));
+app.use(express.static('.'));
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -97,11 +79,11 @@ app.get('/dashboard', requireAuth, (req, res) => {
 });
 
 // Login endpoint
-app.post('/login', async (req, res) => {
+app.post('/login', (req, res) => {
     const { password } = req.body;
     
-    // In production, use a proper password hash
-    const validPassword = 'admin123'; // Change this in production
+    // Simple password check
+    const validPassword = 'admin123';
     
     if (password === validPassword) {
         req.session.authenticated = true;
@@ -346,18 +328,6 @@ app.get('/loadstring/default/:file', (req, res) => {
     } catch (error) {
         console.error('Error serving default loadstring:', error);
         res.status(500).send('-- Error loading script');
-    }
-});
-
-// GitHub sync endpoints
-app.post('/api/github/sync', requireAuth, async (req, res) => {
-    try {
-        // This would implement GitHub synchronization
-        // For now, just return success
-        res.json({ success: true, message: 'GitHub sync feature coming soon' });
-    } catch (error) {
-        console.error('Error syncing with GitHub:', error);
-        res.status(500).json({ error: 'Failed to sync with GitHub' });
     }
 });
 
