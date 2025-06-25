@@ -39,15 +39,47 @@
             <div class="tab-content active" id="repositories">
                 <div class="section-header">
                     <h2><i class="fas fa-folder-open"></i> Your Script Repositories</h2>
-                    <button class="btn btn-primary" onclick="createRepository()">
-                        <i class="fas fa-plus"></i>
-                        New Repository
-                    </button>
+                    <div class="header-buttons">
+                        <button class="btn btn-secondary" onclick="syncToGitHub()">
+                            <i class="fab fa-github"></i>
+                            Sync to GitHub
+                        </button>
+                        <button class="btn btn-primary" onclick="createRepository()">
+                            <i class="fas fa-plus"></i>
+                            New Repository
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="search-bar">
                     <i class="fas fa-search"></i>
                     <input type="text" id="searchInput" placeholder="Search repositories..." onkeyup="searchRepositories()">
+                </div>
+
+                <!-- Hub Loadstring Section -->
+                <div class="hub-loadstring-section">
+                    <div class="hub-header">
+                        <h3><i class="fas fa-terminal"></i> COLDBIND Hub Loadstring</h3>
+                        <span class="hub-status">Live</span>
+                    </div>
+                    <div class="loadstring-container">
+                        <div class="loadstring-info">
+                            <p>Copy and execute this loadstring in your Roblox script executor:</p>
+                        </div>
+                        <div class="loadstring-box">
+                            <input type="text" id="hubLoadstring" readonly value='loadstring(game:HttpGet("https://coldbind-script-host-k8nv.onrender.com/raw/COLDBINDHub/Hub.lua?key=coldbind_access_2024"))()'>
+                            <button class="btn btn-copy" onclick="copyHubLoadstring()">
+                                <i class="fas fa-copy"></i>
+                                Copy
+                            </button>
+                        </div>
+                        <div class="loadstring-details">
+                            <small>
+                                <i class="fas fa-info-circle"></i>
+                                This loadstring loads the COLDBIND Hub directly from the Render deployment
+                            </small>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="repositories-grid" id="repositoriesGrid">

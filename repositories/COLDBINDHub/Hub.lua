@@ -1,6 +1,7 @@
 -- COLDBIND Hub
 -- Made by COLDBIND Team
 -- Version 1.0
+-- Auto-commit test: Updated on 2025-06-25T16:44:05.199Z
 
 -- Services
 local TweenService = game:GetService("TweenService")
@@ -286,21 +287,21 @@ local growButton = createScriptButton(
     "Grow A Garden",
     "Auto farming script for Grow A Garden",
     UDim2.new(0, 0, 0, 0),
-    "https://coldbind-script-host.onrender.com/api/raw/GrowAGarden/Grow.lua?key=coldbind_access_2024"
+    "https://coldbind-script-host-k8nv.onrender.com/raw/GrowAGarden/Grow.lua?key=coldbind_access_2024"
 )
 
 local aimbotButton = createScriptButton(
     "Universal Aimbot",
     "Advanced aimbot with ESP and features",
     UDim2.new(0, 0, 0, 85),
-    "https://coldbind-script-host.onrender.com/api/raw/UniAimbot/UniAimbot.lua?key=coldbind_access_2024"
+    "https://coldbind-script-host-k8nv.onrender.com/raw/UniAimbot/UniAimbot.lua?key=coldbind_access_2024"
 )
 
 local digButton = createScriptButton(
     "Dig Script",
     "Auto strong hit for dig minigames",
     UDim2.new(0, 0, 0, 170),
-    "https://coldbind-script-host.onrender.com/api/raw/DigScript/Dig.lua?key=coldbind_access_2024"
+    "https://coldbind-script-host-k8nv.onrender.com/raw/DigScript/Dig.lua?key=coldbind_access_2024"
 )
 
 -- Status Label

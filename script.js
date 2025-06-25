@@ -488,7 +488,7 @@ function viewScript(scriptId) {
 
     const repo = repositories.find(r => r.id === script.repository);
     const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
-    const rawUrl = `${baseUrl}raw/${repo.id}/${script.name}?key=vulpine2025`;
+    const rawUrl = `${baseUrl}raw/${repo.id}/${script.name}?key=coldbind_access_2024`;
     const loadstringCmd = `loadstring(game:HttpGet("${rawUrl}"))()`;
 
     document.getElementById('scriptModalTitle').textContent = script.name;
@@ -513,7 +513,7 @@ function copyScriptUrl(scriptId) {
 
     const repo = repositories.find(r => r.id === script.repository);
     const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
-    const rawUrl = `${baseUrl}raw/${repo.id}/${script.name}?key=vulpine2025`;
+    const rawUrl = `${baseUrl}raw/${repo.id}/${script.name}?key=coldbind_access_2024`;
 
     if (navigator.clipboard) {
         navigator.clipboard.writeText(rawUrl).then(() => {
@@ -804,4 +804,61 @@ if (localStorage.getItem('vulpine_first_load') !== 'false') {
         loadRepositories();
         localStorage.setItem('vulpine_first_load', 'false');
     }, 1000);
+}
+
+// Copy Hub Loadstring function
+function copyHubLoadstring() {
+    const loadstringInput = document.getElementById('hubLoadstring');
+    const loadstringValue = loadstringInput.value;
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(loadstringValue).then(() => {
+            showMessage('Hub loadstring copied to clipboard!', 'success');
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+            showMessage('Failed to copy loadstring', 'error');
+        });
+    } else {
+        // Fallback for older browsers
+        loadstringInput.select();
+        loadstringInput.setSelectionRange(0, 99999);
+        document.execCommand('copy');
+        showMessage('Hub loadstring copied to clipboard!', 'success');
+    }
+}
+
+// Sync all files to GitHub
+function syncToGitHub() {
+    if (!confirm('This will sync all your local files to GitHub. This may take a few moments. Continue?')) {
+        return;
+    }
+    
+    showMessage('Syncing files to GitHub... Please wait.', 'info');
+    
+    fetch('/api/sync-to-github', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const successCount = data.results.filter(r => r.status === 'success').length;
+            const errorCount = data.results.filter(r => r.status === 'error').length;
+            
+            if (errorCount === 0) {
+                showMessage(`Successfully synced ${successCount} files to GitHub!`, 'success');
+            } else {
+                showMessage(`Synced ${successCount} files, ${errorCount} files had errors. Check console for details.`, 'warning');
+                console.log('Sync results:', data.results);
+            }
+        } else {
+            showMessage('Failed to sync to GitHub: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Sync error:', error);
+        showMessage('Failed to sync to GitHub. Check your internet connection.', 'error');
+    });
 }

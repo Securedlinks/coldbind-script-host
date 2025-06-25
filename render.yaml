@@ -3,8 +3,8 @@ services:
     name: coldbind-script-host
     env: node
     plan: free
-    buildCommand: cd ScriptHost && npm install
-    startCommand: cd ScriptHost && npm start
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
