@@ -29,9 +29,11 @@ app.use(session({
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
 
-// Serve static files from root for main app
+// Serve static files from public directory for login/dashboard
+app.use('/public', express.static('public'));
+
+// Serve static files from root (CSS, JS, images) for main app
 app.use(express.static('.', { 
     index: false,
     dotfiles: 'deny'
