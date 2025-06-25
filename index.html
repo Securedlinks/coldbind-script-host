@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COLDBIND Script Host - Personal Script Repository</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-code-branch"></i>
+                    <h1>COLDBIND Script Host</h1>
+                </div>
+                <nav class="nav">
+                    <button class="nav-btn active" data-tab="repositories">
+                        <i class="fas fa-folder"></i>
+                        Repositories
+                    </button>
+                    <button class="nav-btn" data-tab="upload">
+                        <i class="fas fa-upload"></i>
+                        Upload Script
+                    </button>
+                    <button class="nav-btn" data-tab="editor">
+                        <i class="fas fa-edit"></i>
+                        Script Editor
+                    </button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Repositories Tab -->
+            <div class="tab-content active" id="repositories">
+                <div class="section-header">
+                    <h2><i class="fas fa-folder-open"></i> Your Script Repositories</h2>
+                    <button class="btn btn-primary" onclick="createRepository()">
+                        <i class="fas fa-plus"></i>
+                        New Repository
+                    </button>
+                </div>
+                
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search repositories..." onkeyup="searchRepositories()">
+                </div>
+
+                <div class="repositories-grid" id="repositoriesGrid">
+                    <!-- Repositories will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Upload Tab -->
+            <div class="tab-content" id="upload">
+                <div class="section-header">
+                    <h2><i class="fas fa-upload"></i> Upload New Script</h2>
+                </div>
+                
+                <div class="upload-form">
+                    <div class="form-group">
+                        <label for="repoSelect">Repository:</label>
+                        <select id="repoSelect" onchange="updateRepoInfo()">
+                            <option value="">Select Repository</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="showCreateRepoModal()">
+                            <i class="fas fa-plus"></i>
+                            New Repo
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fileName">File Name:</label>
+                        <input type="text" id="fileName" placeholder="script.lua">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fileDescription">Description:</label>
+                        <input type="text" id="fileDescription" placeholder="Brief description of the script">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fileInput">Upload File:</label>
+                        <input type="file" id="fileInput" accept=".lua,.txt,.js" onchange="previewFile()">
+                        <div class="file-info">Supported: .lua, .txt, .js files</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="filePreview">File Content Preview:</label>
+                        <textarea id="filePreview" rows="10" placeholder="File content will appear here..."></textarea>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="uploadScript()">
+                        <i class="fas fa-upload"></i>
+                        Upload Script
+                    </button>
+                </div>
+            </div>
+
+            <!-- Editor Tab -->
+            <div class="tab-content" id="editor">
+                <div class="section-header">
+                    <h2><i class="fas fa-edit"></i> Script Editor</h2>
+                    <div class="editor-controls">
+                        <button class="btn btn-secondary" onclick="newScript()">
+                            <i class="fas fa-file"></i>
+                            New
+                        </button>
+                        <button class="btn btn-secondary" onclick="saveScript()">
+                            <i class="fas fa-save"></i>
+                            Save
+                        </button>
+                        <button class="btn btn-primary" onclick="testScript()">
+                            <i class="fas fa-play"></i>
+                            Test
+                        </button>
+                    </div>
+                </div>
+
+                <div class="editor-container">
+                    <div class="editor-sidebar">
+                        <h3>Script Info</h3>
+                        <div class="form-group">
+                            <label for="editorRepo">Repository:</label>
+                            <select id="editorRepo">
+                                <option value="">Select Repository</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editorFileName">File Name:</label>
+                            <input type="text" id="editorFileName" placeholder="script.lua">
+                        </div>
+                        <div class="form-group">
+                            <label for="editorDescription">Description:</label>
+                            <textarea id="editorDescription" rows="3" placeholder="Script description..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="editor-main">
+                        <div class="editor-toolbar">
+                            <span class="editor-filename">Untitled Script</span>
+                            <div class="editor-stats">
+                                <span id="lineCount">Lines: 1</span>
+                                <span id="charCount">Chars: 0</span>
+                            </div>
+                        </div>
+                        <textarea id="codeEditor" placeholder="-- Write your Lua script here...
+-- Example:
+local Players = game:GetService('Players')
+local LocalPlayer = Players.LocalPlayer
+
+print('Hello from ' .. LocalPlayer.Name .. '!')"></textarea>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="createRepoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Repository</h3>
+                <span class="close" onclick="closeModal('createRepoModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="newRepoName">Repository Name:</label>
+                    <input type="text" id="newRepoName" placeholder="my-awesome-scripts">
+                </div>
+                <div class="form-group">
+                    <label for="newRepoDescription">Description:</label>
+                    <textarea id="newRepoDescription" rows="3" placeholder="Repository description..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="newRepoPrivate">
+                        Private Repository
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('createRepoModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="createNewRepository()">Create Repository</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="scriptModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3 id="scriptModalTitle">Script Details</h3>
+                <span class="close" onclick="closeModal('scriptModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="script-info">
+                    <div class="script-meta">
+                        <div class="meta-item">
+                            <strong>Repository:</strong>
+                            <span id="modalRepo"></span>
+                        </div>
+                        <div class="meta-item">
+                            <strong>File:</strong>
+                            <span id="modalFile"></span>
+                        </div>
+                        <div class="meta-item">
+                            <strong>Created:</strong>
+                            <span id="modalDate"></span>
+                        </div>
+                        <div class="meta-item">
+                            <strong>Description:</strong>
+                            <span id="modalDescription"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="script-urls">
+                        <div class="url-group">
+                            <label>Raw URL (for loadstring):</label>
+                            <div class="url-input-group">
+                                <input type="text" id="rawUrl" readonly>
+                                <button class="btn btn-copy" onclick="copyToClipboard('rawUrl')">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="url-group">
+                            <label>Loadstring Command:</label>
+                            <div class="url-input-group">
+                                <input type="text" id="loadstringCmd" readonly>
+                                <button class="btn btn-copy" onclick="copyToClipboard('loadstringCmd')">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="script-content">
+                    <div class="content-header">
+                        <h4>Script Content</h4>
+                        <button class="btn btn-secondary" onclick="editScript()">
+                            <i class="fas fa-edit"></i>
+                            Edit
+                        </button>
+                    </div>
+                    <pre id="scriptContent"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

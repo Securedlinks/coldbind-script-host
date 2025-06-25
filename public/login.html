@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COLDBIND Script Host - Login</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="glass-panel">
+            <div class="logo">
+                <h1>❄️ COLDBIND</h1>
+                <p>Script Host</p>
+            </div>
+            
+            <form id="loginForm" class="login-form">
+                <div class="input-group">
+                    <input type="password" id="password" placeholder="Enter admin password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <span>Access Dashboard</span>
+                </button>
+                
+                <div class="error-message" id="errorMessage"></div>
+            </form>
+            
+            <div class="info-panel">
+                <h3>Features</h3>
+                <ul>
+                    <li>🗂️ Repository Management</li>
+                    <li>📝 Script Editor</li>
+                    <li>🔗 Loadstring URLs</li>
+                    <li>🔒 Secure Access</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const errorElement = document.getElementById('errorMessage');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>Authenticating...</span>';
+            errorElement.textContent = '';
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.location.href = '/dashboard';
+                } else {
+                    errorElement.textContent = result.message || 'Authentication failed';
+                }
+            } catch (error) {
+                errorElement.textContent = 'Connection error. Please try again.';
+            }
+            
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span>Access Dashboard</span>';
+        });
+    </script>
+</body>
+</html>

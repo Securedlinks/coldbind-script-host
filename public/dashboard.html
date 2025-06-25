@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COLDBIND Script Host - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-content">
+            <div class="logo">
+                <h2>❄️ COLDBIND Script Host</h2>
+            </div>
+            <div class="nav-actions">
+                <button class="btn btn-secondary" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <div class="sidebar glass-panel">
+            <h3>Repositories</h3>
+            <div class="repo-actions">
+                <button class="btn btn-primary" onclick="showCreateRepo()">+ New Repository</button>
+            </div>
+            <div id="repoList" class="repo-list"></div>
+        </div>
+
+        <div class="main-content">
+            <div class="glass-panel" id="welcomePanel">
+                <h2>Welcome to COLDBIND Script Host</h2>
+                <p>Select a repository from the sidebar or create a new one to get started.</p>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>🗂️ Repositories</h4>
+                        <p>Organize your scripts in separate repositories</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📝 Script Editor</h4>
+                        <p>Edit your Lua scripts with syntax highlighting</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔗 Loadstring URLs</h4>
+                        <p>Direct loadstring access for Roblox scripts</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔒 Secure</h4>
+                        <p>Password protected with secure key access</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel hidden" id="repoPanel">
+                <div class="panel-header">
+                    <h2 id="repoTitle">Repository</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-primary" onclick="showUploadDialog()">📁 Upload Script</button>
+                        <button class="btn btn-danger" onclick="deleteRepository()">🗑️ Delete Repository</button>
+                    </div>
+                </div>
+                
+                <div id="fileList" class="file-list"></div>
+            </div>
+
+            <div class="glass-panel hidden" id="editorPanel">
+                <div class="panel-header">
+                    <h2 id="editorTitle">Script Editor</h2>
+                    <div class="panel-actions">
+                        <button class="btn btn-primary" onclick="saveFile()">💾 Save</button>
+                        <button class="btn btn-secondary" onclick="showFileInfo()">ℹ️ Info</button>
+                        <button class="btn btn-secondary" onclick="closeEditor()">✕ Close</button>
+                    </div>
+                </div>
+                
+                <textarea id="codeEditor" placeholder="-- Your Lua script goes here..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="createRepoModal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <h3>Create New Repository</h3>
+            <form id="createRepoForm">
+                <div class="input-group">
+                    <label for="repoName">Repository Name</label>
+                    <input type="text" id="repoName" placeholder="my-scripts" pattern="[a-zA-Z0-9_-]+" required>
+                    <small>Only letters, numbers, hyphens, and underscores allowed</small>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideCreateRepo()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="uploadModal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <h3>Upload Script</h3>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="input-group">
+                    <label for="scriptFile">Select Lua File</label>
+                    <input type="file" id="scriptFile" accept=".lua,.txt" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideUploadDialog()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="infoModal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <h3>Script Information</h3>
+            <div id="scriptInfo"></div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="hideInfoModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
