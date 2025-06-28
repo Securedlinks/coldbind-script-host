@@ -1,73 +1,110 @@
--- Aimbot Script with Obsidian UI Library
--- Created using Exunys Aimbot Module and Obsidian Library
+-- Aimbot Script with Vision UI Library v2
+-- Ported from Obsidian UI Library to Vision UI Library
+-- Created using Exunys Aimbot Module and Vision Library
 
 -- Compatibility functions
 getgenv = getgenv or function() return _G end
 
--- Load Obsidian Library
-local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/refs/heads/main/"
-local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
-local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
-local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+-- Load Vision Library
+local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/Loco-CTO/UI-Library/main/VisionLibV2/source.lua'))()
 
 -- Load Aimbot Module
 local AimbotModule = loadstring(game:HttpGet("https://raw.githubusercontent.com/Exunys/Aimbot-V3/main/src/Aimbot.lua"))()
 
-local Options = Library.Options
-local Toggles = Library.Toggles
-
 -- Create the main window
-local Window = Library:CreateWindow({    Title = "SNOWBIND",
-                                         Footer = "Credit Exunyx and made by SNOWBIND | v1.0.0",
-                                         Size = UDim2.fromOffset(750, 650),
-                                         Center = true,
-                                         AutoShow = true,
-                                         ToggleKeybind = Enum.KeyCode.RightShift,
-                                         NotifySide = "Right",
-                                         ShowCustomCursor = true,
+local Window = Library:Create({
+    Name = "SNOWBIND",
+    Footer = "Credit Exunyx and made by SNOWBIND | v1.0.0",
+    ToggleKey = Enum.KeyCode.RightShift,
+    LoadedCallback = function()
+        -- Callback when UI is loaded
+    end,
+    KeySystem = false, -- Set to true if you want to use a key system
+    Key = "123456", -- Your key here
+    MaxAttempts = 5,
+    DiscordLink = nil, -- Your Discord link here if you have one
 })
 
 -- Create tabs
-local Tabs = {
-    Aimbot = Window:AddTab("Aimbot", "crosshair"),
-    FOV = Window:AddTab("FOV Settings", "circle"),
-    ESP = Window:AddTab("ESP", "eye"),
-    Players = Window:AddTab("Players", "users"),
-    Sweat = Window:AddTab("Sweat", "droplet"),
-    Movement = Window:AddTab("Movement", "move"),
-    ["UI Settings"] = Window:AddTab("UI Settings", "settings"),
-}
+local AimbotTab = Window:Tab({
+    Name = "Aimbot",
+    Icon = "rbxassetid://11396131982",
+    Color = Color3.new(1, 0, 0),
+})
 
--- Aimbot Settings Tab
-local AimbotGroup = Tabs.Aimbot:AddLeftGroupbox("Aimbot Settings", "target")
+local SilentAimTab = Window:Tab({
+    Name = "Silent Aim",
+    Icon = "rbxassetid://11476626403",
+    Color = Color3.new(0, 0, 1),
+})
 
-AimbotGroup:AddToggle("AimbotEnabled", {
-    Text = "Enable Aimbot",
+local FOVTab = Window:Tab({
+    Name = "FOV Settings",
+    Icon = "rbxassetid://11476626403",
+    Color = Color3.new(0, 1, 0),
+})
+
+local ESPTab = Window:Tab({
+    Name = "ESP",
+    Icon = "rbxassetid://11476626403",
+    Color = Color3.new(1, 1, 0),
+})
+
+local PlayersTab = Window:Tab({
+    Name = "Players",
+    Icon = "rbxassetid://11476626403",
+    Color = Color3.new(1, 0, 1),
+})
+
+local SweatTab = Window:Tab({
+    Name = "Sweat",
+    Icon = "rbxassetid://11476626403",
+    Color = Color3.new(0, 1, 1),
+})
+
+local MovementTab = Window:Tab({
+    Name = "Movement",
+    Icon = "rbxassetid://11476626403",
+    Color = Color3.new(0.5, 0.5, 0.5),
+})
+
+local UISettingsTab = Window:Tab({
+    Name = "UI Settings",
+    Icon = "rbxassetid://11476626403",
+    Color = Color3.new(0.7, 0.7, 0.7),
+})
+
+-- Aimbot Settings Section
+local AimbotSettingsSection = AimbotTab:Section({
+    Name = "Aimbot Settings"
+})
+
+AimbotSettingsSection:Toggle({
+    Name = "Enable Aimbot",
     Default = AimbotModule.Settings.Enabled,
     Callback = function(Value)
         AimbotModule.Settings.Enabled = Value
         if Value then
             Library:Notify({
-                Title = "Aimbot Enabled",
-                Description = "Aimbot is now active",
-                Time = 2,
+                Name = "Aimbot Enabled",
+                Text = "Aimbot is now active",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         else
             Library:Notify({
-                Title = "Aimbot Disabled",
-                Description = "Aimbot is now inactive",
-                Time = 2,
+                Name = "Aimbot Disabled",
+                Text = "Aimbot is now inactive",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         end
     end,
 })
 
--- Enhanced target part selection with multiple options
-AimbotGroup:AddDropdown("LockPart", {
-    Values = { "Head", "Torso", "HumanoidRootPart", "UpperTorso", "LowerTorso", "Random", "Smart", "Cycle" },
-    Default = AimbotModule.Settings.LockPart,
-    Text = "Lock Part",
-    Tooltip = "Smart: Head for stationary, HRP for moving targets\nCycle: Cycles through parts\nRandom: Random part each lock",
+AimbotSettingsSection:Dropdown({
+    Name = "Lock Part",
+    Items = { "Head", "Torso", "HumanoidRootPart", "UpperTorso", "LowerTorso", "Random", "Smart", "Cycle" },
     Callback = function(Value)
         AimbotModule.Settings.LockPart = Value
 
@@ -84,9 +121,10 @@ AimbotGroup:AddDropdown("LockPart", {
                         local nextPart = getgenv().CycleParts[getgenv().CurrentCycleIndex]
                         AimbotModule.Settings.LockPart = nextPart
                         Library:Notify({
-                            Title = "Part Cycled",
-                            Description = "Now targeting: " .. nextPart,
-                            Time = 1,
+                            Name = "Part Cycled",
+                            Text = "Now targeting: " .. nextPart,
+                            Icon = "rbxassetid://11401835376",
+                            Duration = 1,
                         })
                     end
                 end
@@ -102,9 +140,10 @@ AimbotGroup:AddDropdown("LockPart", {
                     local randomPart = getgenv().RandomParts[randomIndex]
                     AimbotModule.Settings.LockPart = randomPart
                     Library:Notify({
-                        Title = "Random Part",
-                        Description = "Now targeting: " .. randomPart,
-                        Time = 1,
+                        Name = "Random Part",
+                        Text = "Now targeting: " .. randomPart,
+                        Icon = "rbxassetid://11401835376",
+                        Duration = 1,
                     })
                 end
             end
@@ -128,11 +167,9 @@ AimbotGroup:AddDropdown("LockPart", {
     end,
 })
 
-AimbotGroup:AddDropdown("LockMode", {
-    Values = { "CFrame", "mousemoverel", "Camera", "Hybrid" },
-    Default = AimbotModule.Settings.LockMode == 1 and "CFrame" or "mousemoverel",
-    Text = "Lock Mode",
-    Tooltip = "CFrame: Instant lock (may be detected)\nMousemoverel: Mouse movement (more legit)\nCamera: Camera manipulation\nHybrid: Combines methods",
+AimbotSettingsSection:Dropdown({
+    Name = "Lock Mode",
+    Items = { "CFrame", "mousemoverel", "Camera", "Hybrid" },
     Callback = function(Value)
         if Value == "CFrame" then
             AimbotModule.Settings.LockMode = 1
@@ -145,8 +182,8 @@ AimbotGroup:AddDropdown("LockMode", {
                 getgenv().CameraManipulation = function(target, part)
                     if workspace.CurrentCamera and target and target.Character and target.Character:FindFirstChild(part) then
                         workspace.CurrentCamera.CFrame = CFrame.new(
-                            workspace.CurrentCamera.CFrame.Position,
-                            target.Character[part].Position
+                                workspace.CurrentCamera.CFrame.Position,
+                                target.Character[part].Position
                         )
                     end
                 end
@@ -167,8 +204,8 @@ AimbotGroup:AddDropdown("LockMode", {
 
                         -- Subtle camera adjustment
                         camera.CFrame = camera.CFrame:Lerp(
-                            CFrame.new(camera.CFrame.Position, targetPos),
-                            0.2 -- Subtle adjustment factor
+                                CFrame.new(camera.CFrame.Position, targetPos),
+                                0.2 -- Subtle adjustment factor
                         )
                     end
                 end
@@ -177,237 +214,154 @@ AimbotGroup:AddDropdown("LockMode", {
     end,
 })
 
-AimbotGroup:AddSlider("Sensitivity", {
-    Text = "Sensitivity",
-    Default = AimbotModule.Settings.Sensitivity,
-    Min = 0,
+AimbotSettingsSection:Slider({
+    Name = "Sensitivity",
     Max = 5,
-    Rounding = 2,
+    Min = 0,
+    Default = AimbotModule.Settings.Sensitivity,
     Callback = function(Value)
         AimbotModule.Settings.Sensitivity = Value
     end,
 })
 
-AimbotGroup:AddSlider("Sensitivity2", {
-    Text = "Mouse Sensitivity",
-    Default = AimbotModule.Settings.Sensitivity2,
-    Min = 0.1,
+AimbotSettingsSection:Slider({
+    Name = "Mouse Sensitivity",
     Max = 10,
-    Rounding = 2,
+    Min = 0.1,
+    Default = AimbotModule.Settings.Sensitivity2,
     Callback = function(Value)
         AimbotModule.Settings.Sensitivity2 = Value
     end,
 })
 
--- Add smoothness control for more human-like aiming
-AimbotGroup:AddSlider("Smoothness", {
-    Text = "Smoothness",
-    Default = AimbotModule.Settings.Smoothness or 0.5,
-    Min = 0,
+AimbotSettingsSection:Slider({
+    Name = "Smoothness",
     Max = 1,
-    Rounding = 2,
-    Tooltip = "Higher = smoother but slower aiming (more human-like)",
+    Min = 0,
+    Default = AimbotModule.Settings.Smoothness or 0.5,
     Callback = function(Value)
         AimbotModule.Settings.Smoothness = Value
     end,
 })
 
--- Add aim assist strength for subtle help rather than full lock
-AimbotGroup:AddSlider("AimAssistStrength", {
-    Text = "Aim Assist Strength",
-    Default = AimbotModule.Settings.AimAssistStrength or 1,
-    Min = 0,
+AimbotSettingsSection:Slider({
+    Name = "Aim Assist Strength",
     Max = 1,
-    Rounding = 2,
-    Tooltip = "1 = Full aimbot, lower values provide subtle aim assist",
+    Min = 0,
+    Default = AimbotModule.Settings.AimAssistStrength or 1,
     Callback = function(Value)
         AimbotModule.Settings.AimAssistStrength = Value
     end,
 })
 
--- Aimbot Checks Group
-local ChecksGroup = Tabs.Aimbot:AddRightGroupbox("Checks", "shield-check")
+-- Aimbot Checks Section
+local ChecksSection = AimbotTab:Section({
+    Name = "Checks"
+})
 
-ChecksGroup:AddToggle("TeamCheck", {
-    Text = "Team Check",
+ChecksSection:Toggle({
+    Name = "Team Check",
     Default = AimbotModule.Settings.TeamCheck,
     Callback = function(Value)
         AimbotModule.Settings.TeamCheck = Value
     end,
 })
 
-ChecksGroup:AddToggle("AliveCheck", {
-    Text = "Alive Check",
+ChecksSection:Toggle({
+    Name = "Alive Check",
     Default = AimbotModule.Settings.AliveCheck,
     Callback = function(Value)
         AimbotModule.Settings.AliveCheck = Value
     end,
 })
 
-ChecksGroup:AddToggle("WallCheck", {
-    Text = "Wall Check",
+ChecksSection:Toggle({
+    Name = "Wall Check",
     Default = AimbotModule.Settings.WallCheck,
     Callback = function(Value)
         AimbotModule.Settings.WallCheck = Value
     end,
 })
 
--- Add visibility check (checks if target is visible on screen)
-ChecksGroup:AddToggle("VisibilityCheck", {
-    Text = "Visibility Check",
+ChecksSection:Toggle({
+    Name = "Visibility Check",
     Default = AimbotModule.Settings.VisibilityCheck or false,
-    Tooltip = "Only target players visible on screen",
     Callback = function(Value)
         AimbotModule.Settings.VisibilityCheck = Value
     end,
 })
 
--- Add distance check with configurable max distance
-ChecksGroup:AddToggle("DistanceCheck", {
-    Text = "Distance Check",
+ChecksSection:Toggle({
+    Name = "Distance Check",
     Default = AimbotModule.Settings.DistanceCheck or false,
-    Tooltip = "Only target players within specified distance",
     Callback = function(Value)
         AimbotModule.Settings.DistanceCheck = Value
     end,
 })
 
-ChecksGroup:AddSlider("MaxDistance", {
-    Text = "Max Distance",
-    Default = AimbotModule.Settings.MaxDistance or 1000,
-    Min = 10,
+ChecksSection:Slider({
+    Name = "Max Distance",
     Max = 2000,
-    Rounding = 0,
-    Tooltip = "Maximum distance to target players",
+    Min = 10,
+    Default = AimbotModule.Settings.MaxDistance or 1000,
     Callback = function(Value)
         AimbotModule.Settings.MaxDistance = Value
     end,
 })
 
--- Add health check with configurable min health
-ChecksGroup:AddToggle("HealthCheck", {
-    Text = "Health Check",
+ChecksSection:Toggle({
+    Name = "Health Check",
     Default = AimbotModule.Settings.HealthCheck or false,
-    Tooltip = "Only target players with health above threshold",
     Callback = function(Value)
         AimbotModule.Settings.HealthCheck = Value
     end,
 })
 
-ChecksGroup:AddSlider("MinHealth", {
-    Text = "Min Health %",
-    Default = AimbotModule.Settings.MinHealth or 0,
-    Min = 0,
+ChecksSection:Slider({
+    Name = "Min Health %",
     Max = 100,
-    Rounding = 0,
-    Tooltip = "Minimum health percentage to target players",
+    Min = 0,
+    Default = AimbotModule.Settings.MinHealth or 0,
     Callback = function(Value)
         AimbotModule.Settings.MinHealth = Value
     end,
 })
 
-local ToggleModeToggle = ChecksGroup:AddToggle("Toggle", {
-    Text = "Toggle Mode",
+local ToggleModeToggle = ChecksSection:Toggle({
+    Name = "Toggle Mode",
     Default = AimbotModule.Settings.Toggle,
-    Tooltip = "Toggle to turn aimbot on/off with keybind instead of hold",
     Callback = function(Value)
         AimbotModule.Settings.Toggle = Value
     end,
 })
 
--- Add the keybind to the toggle (proper Obsidian way)
-local TriggerKeyPicker = ToggleModeToggle:AddKeyPicker("TriggerKey", {
-    Default = "MB2",
-    Text = "Aimbot Key",
-    Mode = "Hold",
-    Callback = function(Value)
-        print("Aimbot key activated:", Value)
+ChecksSection:Keybind({
+    Name = "Aimbot Key",
+    Default = Enum.KeyCode.E,
+    Callback = function()
+        -- This will be triggered when the key is pressed
     end,
-    ChangedCallback = function(New)
+    UpdateKeyCallback = function(Key)
         -- Handle different key types properly
-        if New == "MB1" then
+        if Key == Enum.KeyCode.MouseButton1 then
             AimbotModule.Settings.TriggerKey = Enum.UserInputType.MouseButton1
-        elseif New == "MB2" then
+        elseif Key == Enum.KeyCode.MouseButton2 then
             AimbotModule.Settings.TriggerKey = Enum.UserInputType.MouseButton2
         else
             -- For regular keys, try to convert to KeyCode
-            local success, keyCode = pcall(function()
-                return Enum.KeyCode[New]
-            end)
-            if success and keyCode then
-                AimbotModule.Settings.TriggerKey = keyCode
-            else
-                AimbotModule.Settings.TriggerKey = Enum.UserInputType.MouseButton2
-            end
-        end
-        print("Aimbot key changed to:", New)
-    end,
-})
-
--- Add a secondary keybind for toggling silent aim
-local SilentAimToggle = ChecksGroup:AddToggle("SilentAim", {
-    Text = "Silent Aim",
-    Default = AimbotModule.Settings.SilentAim or false,
-    Tooltip = "Aim without moving your camera (harder to detect)",
-    Callback = function(Value)
-        AimbotModule.Settings.SilentAim = Value
-
-        -- Initialize silent aim if enabled
-        if Value then
-            if not getgenv().SilentAimInitialized then
-                getgenv().SilentAimInitialized = true
-
-                -- Create silent aim hook function
-                getgenv().SilentAimHook = function()
-                    local oldNamecall
-                    oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-                        local args = {...}
-                        local method = getnamecallmethod()
-
-                        -- Check if it's a relevant firing method
-                        if (method == "FireServer" or method == "InvokeServer") and
-                           (self.Name == "RemoteEvent" or self.Name:lower():find("fire") or self.Name:lower():find("shoot")) and
-                           AimbotModule.Settings.SilentAim and
-                           AimbotModule.Settings.Enabled then
-
-                            -- Get closest player
-                            local target = AimbotModule.GetClosestPlayer()
-                            if target and target.Character then
-                                local targetPart = target.Character:FindFirstChild(AimbotModule.Settings.LockPart)
-                                if targetPart then
-                                    -- Modify arguments to hit the target
-                                    -- This is a generic implementation and may need game-specific adjustments
-                                    for i, v in pairs(args) do
-                                        if typeof(v) == "Vector3" then
-                                            args[i] = targetPart.Position
-                                        elseif typeof(v) == "CFrame" then
-                                            args[i] = CFrame.new(v.Position, targetPart.Position)
-                                        end
-                                    end
-                                end
-                            end
-                        end
-
-                        return oldNamecall(self, unpack(args))
-                    end)
-                end
-
-                -- Run the hook
-                pcall(getgenv().SilentAimHook)
-            end
+            AimbotModule.Settings.TriggerKey = Key
         end
     end,
 })
 
--- Advanced Targeting Group
-local TargetingGroup = Tabs.Aimbot:AddLeftGroupbox("Advanced Targeting", "crosshair")
+-- Advanced Targeting Section
+local TargetingSection = AimbotTab:Section({
+    Name = "Advanced Targeting"
+})
 
--- Target priority system
-TargetingGroup:AddDropdown("TargetPriority", {
-    Values = { "Closest", "Health", "Threat", "Random" },
-    Default = AimbotModule.Settings.TargetPriority or "Closest",
-    Text = "Target Priority",
-    Tooltip = "How to prioritize targets:\nClosest: Target closest player\nHealth: Target lowest health\nThreat: Target player dealing most damage\nRandom: Target random player",
+TargetingSection:Dropdown({
+    Name = "Target Priority",
+    Items = { "Closest", "Health", "Threat", "Random" },
     Callback = function(Value)
         AimbotModule.Settings.TargetPriority = Value
 
@@ -439,8 +393,8 @@ TargetingGroup:AddDropdown("TargetPriority", {
 
                                 if AimbotModule.Settings.WallCheck then
                                     local ray = Ray.new(
-                                        game:GetService("Workspace").CurrentCamera.CFrame.Position,
-                                        (plr.Character.HumanoidRootPart.Position - game:GetService("Workspace").CurrentCamera.CFrame.Position).Unit * 1000
+                                            game:GetService("Workspace").CurrentCamera.CFrame.Position,
+                                            (plr.Character.HumanoidRootPart.Position - game:GetService("Workspace").CurrentCamera.CFrame.Position).Unit * 1000
                                     )
                                     local hit, _ = game:GetService("Workspace"):FindPartOnRayWithIgnoreList(ray, {game:GetService("Players").LocalPlayer.Character})
                                     isBlockedByWall = hit and hit:IsDescendantOf(plr.Character) == false
@@ -488,8 +442,8 @@ TargetingGroup:AddDropdown("TargetPriority", {
 
                             if AimbotModule.Settings.WallCheck then
                                 local ray = Ray.new(
-                                    game:GetService("Workspace").CurrentCamera.CFrame.Position,
-                                    (plr.Character.HumanoidRootPart.Position - game:GetService("Workspace").CurrentCamera.CFrame.Position).Unit * 1000
+                                        game:GetService("Workspace").CurrentCamera.CFrame.Position,
+                                        (plr.Character.HumanoidRootPart.Position - game:GetService("Workspace").CurrentCamera.CFrame.Position).Unit * 1000
                                 )
                                 local hit, _ = game:GetService("Workspace"):FindPartOnRayWithIgnoreList(ray, {game:GetService("Players").LocalPlayer.Character})
                                 isBlockedByWall = hit and hit:IsDescendantOf(plr.Character) == false
@@ -516,8 +470,8 @@ TargetingGroup:AddDropdown("TargetPriority", {
 
                             if AimbotModule.Settings.WallCheck then
                                 local ray = Ray.new(
-                                    game:GetService("Workspace").CurrentCamera.CFrame.Position,
-                                    (plr.Character.HumanoidRootPart.Position - game:GetService("Workspace").CurrentCamera.CFrame.Position).Unit * 1000
+                                        game:GetService("Workspace").CurrentCamera.CFrame.Position,
+                                        (plr.Character.HumanoidRootPart.Position - game:GetService("Workspace").CurrentCamera.CFrame.Position).Unit * 1000
                                 )
                                 local hit, _ = game:GetService("Workspace"):FindPartOnRayWithIgnoreList(ray, {game:GetService("Players").LocalPlayer.Character})
                                 isBlockedByWall = hit and hit:IsDescendantOf(plr.Character) == false
@@ -541,45 +495,40 @@ TargetingGroup:AddDropdown("TargetPriority", {
     end,
 })
 
--- Target switching settings
-TargetingGroup:AddToggle("AutoSwitch", {
-    Text = "Auto Switch Target",
+TargetingSection:Toggle({
+    Name = "Auto Switch Target",
     Default = AimbotModule.Settings.AutoSwitch or false,
-    Tooltip = "Automatically switch to better targets",
     Callback = function(Value)
         AimbotModule.Settings.AutoSwitch = Value
     end,
 })
 
-TargetingGroup:AddSlider("SwitchDelay", {
-    Text = "Switch Delay (ms)",
-    Default = AimbotModule.Settings.SwitchDelay or 500,
-    Min = 0,
+TargetingSection:Slider({
+    Name = "Switch Delay (ms)",
     Max = 2000,
-    Rounding = 0,
-    Tooltip = "Delay between target switches",
+    Min = 0,
+    Default = AimbotModule.Settings.SwitchDelay or 500,
     Callback = function(Value)
         AimbotModule.Settings.SwitchDelay = Value
     end,
 })
 
--- Enhanced Prediction Settings
-local PredictionGroup = Tabs.Aimbot:AddRightGroupbox("Prediction Settings", "move")
+-- Prediction Settings Section
+local PredictionSection = AimbotTab:Section({
+    Name = "Prediction Settings"
+})
 
-PredictionGroup:AddToggle("EnablePrediction", {
-    Text = "Enable Prediction",
+PredictionSection:Toggle({
+    Name = "Enable Prediction",
     Default = AimbotModule.Settings.OffsetToMoveDirection,
-    Tooltip = "Predict player movement",
     Callback = function(Value)
         AimbotModule.Settings.OffsetToMoveDirection = Value
     end,
 })
 
-PredictionGroup:AddDropdown("PredictionMethod", {
-    Values = { "Basic", "Velocity", "Advanced", "Adaptive" },
-    Default = AimbotModule.Settings.PredictionMethod or "Basic",
-    Text = "Prediction Method",
-    Tooltip = "Basic: Simple direction prediction\nVelocity: Uses velocity for prediction\nAdvanced: Accounts for acceleration\nAdaptive: Learns player movement patterns",
+PredictionSection:Dropdown({
+    Name = "Prediction Method",
+    Items = { "Basic", "Velocity", "Advanced", "Adaptive" },
     Callback = function(Value)
         AimbotModule.Settings.PredictionMethod = Value
 
@@ -694,143 +643,50 @@ PredictionGroup:AddDropdown("PredictionMethod", {
     end,
 })
 
-PredictionGroup:AddSlider("PredictionStrength", {
-    Text = "Prediction Strength",
-    Default = AimbotModule.Settings.OffsetIncrement,
-    Min = 1,
+PredictionSection:Slider({
+    Name = "Prediction Strength",
     Max = 30,
-    Rounding = 1,
+    Min = 1,
+    Default = AimbotModule.Settings.OffsetIncrement,
     Callback = function(Value)
         AimbotModule.Settings.OffsetIncrement = Value
     end,
 })
 
--- Add ping compensation
-PredictionGroup:AddToggle("PingCompensation", {
-    Text = "Ping Compensation",
+PredictionSection:Toggle({
+    Name = "Ping Compensation",
     Default = AimbotModule.Settings.PingCompensation or false,
-    Tooltip = "Adjust prediction based on your ping",
     Callback = function(Value)
         AimbotModule.Settings.PingCompensation = Value
     end,
 })
 
--- Add silent aim feature
-local SilentAimGroup = Tabs.Aimbot:AddRightGroupbox("Silent Aim", "eye-off")
-
-SilentAimGroup:AddToggle("SilentAimEnabled", {
-    Text = "Enable Silent Aim",
-    Default = AimbotModule.Settings.SilentAim or false,
-    Tooltip = "Aim without moving your camera (harder to detect)",
-    Callback = function(Value)
-        AimbotModule.Settings.SilentAim = Value
-
-        -- Initialize silent aim if enabled
-        if Value and not getgenv().SilentAimInitialized then
-            getgenv().SilentAimInitialized = true
-
-            -- Create silent aim hook function
-            getgenv().SilentAimHook = function()
-                local oldNamecall
-                oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-                    local args = {...}
-                    local method = getnamecallmethod()
-
-                    -- Check if it's a relevant firing method
-                    if (method == "FireServer" or method == "InvokeServer") and
-                       (self.Name == "RemoteEvent" or self.Name:lower():find("fire") or self.Name:lower():find("shoot")) and
-                       AimbotModule.Settings.SilentAim and
-                       AimbotModule.Settings.Enabled then
-
-                        -- Get closest player
-                        local target = AimbotModule.GetClosestPlayer()
-                        if target and target.Character then
-                            local targetPart = target.Character:FindFirstChild(AimbotModule.Settings.LockPart)
-                            if targetPart then
-                                -- Modify arguments to hit the target
-                                -- This is a generic implementation and may need game-specific adjustments
-                                for i, v in pairs(args) do
-                                    if typeof(v) == "Vector3" then
-                                        args[i] = targetPart.Position
-                                    elseif typeof(v) == "CFrame" then
-                                        args[i] = CFrame.new(v.Position, targetPart.Position)
-                                    end
-                                end
-                            end
-                        end
-                    end
-
-                    return oldNamecall(self, unpack(args))
-                end)
-            end
-
-            -- Run the hook
-            pcall(getgenv().SilentAimHook)
-        end
-    end,
+-- Anti-Detection Section
+local AntiDetectionSection = AimbotTab:Section({
+    Name = "Anti-Detection"
 })
 
-SilentAimGroup:AddSlider("SilentAimFOV", {
-    Text = "Silent Aim FOV",
-    Default = AimbotModule.Settings.SilentAimFOV or 100,
-    Min = 10,
-    Max = 500,
-    Rounding = 0,
-    Tooltip = "Field of view for silent aim",
-    Callback = function(Value)
-        AimbotModule.Settings.SilentAimFOV = Value
-    end,
-})
-
-SilentAimGroup:AddToggle("SilentAimVisibleCheck", {
-    Text = "Visible Check",
-    Default = AimbotModule.Settings.SilentAimVisibleCheck or true,
-    Tooltip = "Only target visible players",
-    Callback = function(Value)
-        AimbotModule.Settings.SilentAimVisibleCheck = Value
-    end,
-})
-
-SilentAimGroup:AddSlider("SilentAimHitChance", {
-    Text = "Hit Chance (%)",
-    Default = AimbotModule.Settings.SilentAimHitChance or 100,
-    Min = 0,
-    Max = 100,
-    Rounding = 0,
-    Tooltip = "Chance to hit the target (lower = more legit)",
-    Callback = function(Value)
-        AimbotModule.Settings.SilentAimHitChance = Value
-    end,
-})
-
--- Add anti-detection features
-local AntiDetectionGroup = Tabs.Aimbot:AddLeftGroupbox("Anti-Detection", "shield")
-
-AntiDetectionGroup:AddToggle("RandomizeAim", {
-    Text = "Randomize Aim",
+AntiDetectionSection:Toggle({
+    Name = "Randomize Aim",
     Default = AimbotModule.Settings.RandomizeAim or false,
-    Tooltip = "Add slight randomness to aim for human-like behavior",
     Callback = function(Value)
         AimbotModule.Settings.RandomizeAim = Value
     end,
 })
 
-AntiDetectionGroup:AddSlider("RandomizationAmount", {
-    Text = "Randomization",
-    Default = AimbotModule.Settings.RandomizationAmount or 5,
-    Min = 0,
+AntiDetectionSection:Slider({
+    Name = "Randomization",
     Max = 20,
-    Rounding = 1,
-    Tooltip = "Amount of randomization to add",
+    Min = 0,
+    Default = AimbotModule.Settings.RandomizationAmount or 5,
     Callback = function(Value)
         AimbotModule.Settings.RandomizationAmount = Value
     end,
 })
 
-AntiDetectionGroup:AddToggle("HumanizeAim", {
-    Text = "Humanize Aim",
+AntiDetectionSection:Toggle({
+    Name = "Humanize Aim",
     Default = AimbotModule.Settings.HumanizeAim or false,
-    Tooltip = "Simulate human aiming patterns",
     Callback = function(Value)
         AimbotModule.Settings.HumanizeAim = Value
 
@@ -868,153 +724,147 @@ AntiDetectionGroup:AddToggle("HumanizeAim", {
     end,
 })
 
-AntiDetectionGroup:AddToggle("DelayedAim", {
-    Text = "Delayed Aim",
+AntiDetectionSection:Toggle({
+    Name = "Delayed Aim",
     Default = AimbotModule.Settings.DelayedAim or false,
-    Tooltip = "Add reaction time delay before aiming",
     Callback = function(Value)
         AimbotModule.Settings.DelayedAim = Value
     end,
 })
 
-AntiDetectionGroup:AddSlider("ReactionTime", {
-    Text = "Reaction Time (ms)",
-    Default = AimbotModule.Settings.ReactionTime or 150,
-    Min = 0,
+AntiDetectionSection:Slider({
+    Name = "Reaction Time (ms)",
     Max = 500,
-    Rounding = 0,
-    Tooltip = "Simulated human reaction time",
+    Min = 0,
+    Default = AimbotModule.Settings.ReactionTime or 150,
     Callback = function(Value)
         AimbotModule.Settings.ReactionTime = Value
     end,
 })
 
--- FOV Settings Tab
-local FOVGroup = Tabs.FOV:AddLeftGroupbox("FOV Circle", "circle")
+-- FOV Settings Section
+local FOVCircleSection = FOVTab:Section({
+    Name = "FOV Circle"
+})
 
-FOVGroup:AddToggle("FOVEnabled", {
-    Text = "Enable FOV Circle",
+FOVCircleSection:Toggle({
+    Name = "Enable FOV Circle",
     Default = AimbotModule.FOVSettings.Enabled,
     Callback = function(Value)
         AimbotModule.FOVSettings.Enabled = Value
     end,
 })
 
-FOVGroup:AddToggle("FOVVisible", {
-    Text = "Visible",
+FOVCircleSection:Toggle({
+    Name = "Visible",
     Default = AimbotModule.FOVSettings.Visible,
     Callback = function(Value)
         AimbotModule.FOVSettings.Visible = Value
     end,
 })
 
-FOVGroup:AddSlider("FOVRadius", {
-    Text = "Radius",
-    Default = AimbotModule.FOVSettings.Radius,
-    Min = 10,
+FOVCircleSection:Slider({
+    Name = "Radius",
     Max = 500,
-    Rounding = 0,
+    Min = 10,
+    Default = AimbotModule.FOVSettings.Radius,
     Callback = function(Value)
         AimbotModule.FOVSettings.Radius = Value
     end,
 })
 
-FOVGroup:AddSlider("FOVThickness", {
-    Text = "Thickness",
-    Default = AimbotModule.FOVSettings.Thickness,
-    Min = 1,
+FOVCircleSection:Slider({
+    Name = "Thickness",
     Max = 10,
-    Rounding = 0,
+    Min = 1,
+    Default = AimbotModule.FOVSettings.Thickness,
     Callback = function(Value)
         AimbotModule.FOVSettings.Thickness = Value
     end,
 })
 
-FOVGroup:AddSlider("FOVSides", {
-    Text = "Number of Sides",
-    Default = AimbotModule.FOVSettings.NumSides,
-    Min = 3,
+FOVCircleSection:Slider({
+    Name = "Number of Sides",
     Max = 100,
-    Rounding = 0,
+    Min = 3,
+    Default = AimbotModule.FOVSettings.NumSides,
     Callback = function(Value)
         AimbotModule.FOVSettings.NumSides = Value
     end,
 })
 
-FOVGroup:AddToggle("FOVFilled", {
-    Text = "Filled",
+FOVCircleSection:Toggle({
+    Name = "Filled",
     Default = AimbotModule.FOVSettings.Filled,
     Callback = function(Value)
         AimbotModule.FOVSettings.Filled = Value
     end,
 })
 
--- FOV Colors Group
-local FOVColorsGroup = Tabs.FOV:AddRightGroupbox("FOV Colors", "palette")
+-- FOV Colors Section
+local FOVColorsSection = FOVTab:Section({
+    Name = "FOV Colors"
+})
 
-local RainbowColorToggle = FOVColorsGroup:AddToggle("RainbowColor", {
-    Text = "Rainbow Color",
+FOVColorsSection:Toggle({
+    Name = "Rainbow Color",
     Default = AimbotModule.FOVSettings.RainbowColor,
     Callback = function(Value)
         AimbotModule.FOVSettings.RainbowColor = Value
     end,
 })
 
-local RainbowOutlineToggle = FOVColorsGroup:AddToggle("RainbowOutline", {
-    Text = "Rainbow Outline",
+FOVColorsSection:Toggle({
+    Name = "Rainbow Outline",
     Default = AimbotModule.FOVSettings.RainbowOutlineColor,
     Callback = function(Value)
         AimbotModule.FOVSettings.RainbowOutlineColor = Value
     end,
 })
 
--- Add color pickers to toggles for better organization
-RainbowColorToggle:AddColorPicker("FOVColor", {
-    Default = AimbotModule.FOVSettings.Color,
-    Title = "FOV Circle Color",
-    Callback = function(Value)
-        AimbotModule.FOVSettings.Color = Value
+FOVColorsSection:Colorpicker({
+    Name = "FOV Circle Color",
+    DefaultColor = AimbotModule.FOVSettings.Color,
+    Callback = function(Color)
+        AimbotModule.FOVSettings.Color = Color
     end,
 })
 
-RainbowOutlineToggle:AddColorPicker("OutlineColor", {
-    Default = AimbotModule.FOVSettings.OutlineColor,
-    Title = "FOV Outline Color",
-    Callback = function(Value)
-        AimbotModule.FOVSettings.OutlineColor = Value
+FOVColorsSection:Colorpicker({
+    Name = "FOV Outline Color",
+    DefaultColor = AimbotModule.FOVSettings.OutlineColor,
+    Callback = function(Color)
+        AimbotModule.FOVSettings.OutlineColor = Color
     end,
 })
 
--- Separate toggle for locked color
-local LockedColorToggle = FOVColorsGroup:AddToggle("ShowLockedColor", {
-    Text = "Custom Locked Color",
+FOVColorsSection:Toggle({
+    Name = "Custom Locked Color",
     Default = false,
-    Tooltip = "Use custom color when target is locked",
     Callback = function(Value)
         -- This can be used to enable/disable custom locked color
     end,
 })
 
-LockedColorToggle:AddColorPicker("LockedColor", {
-    Default = AimbotModule.FOVSettings.LockedColor,
-    Title = "FOV Locked Color",
-    Callback = function(Value)
-        AimbotModule.FOVSettings.LockedColor = Value
+FOVColorsSection:Colorpicker({
+    Name = "FOV Locked Color",
+    DefaultColor = AimbotModule.FOVSettings.LockedColor,
+    Callback = function(Color)
+        AimbotModule.FOVSettings.LockedColor = Color
     end,
 })
 
-FOVColorsGroup:AddSlider("FOVTransparency", {
-    Text = "Transparency",
-    Default = AimbotModule.FOVSettings.Transparency,
-    Min = 0,
+FOVColorsSection:Slider({
+    Name = "Transparency",
     Max = 1,
-    Rounding = 2,
+    Min = 0,
+    Default = AimbotModule.FOVSettings.Transparency,
     Callback = function(Value)
         AimbotModule.FOVSettings.Transparency = Value
     end,
 })
 
--- ESP Settings Tab
+-- ESP Settings
 local ESPSettings = {
     Enabled = false,
     Box_Color = Color3.fromRGB(255, 0, 0),
@@ -1033,8 +883,12 @@ local ESPSettings = {
     TeamColor = true,
     Green = Color3.fromRGB(0, 255, 0),
     Red = Color3.fromRGB(255, 0, 0),
+    Names = false,
+    Distances = false,
+    Weapons = false,
+    Chams = false,
 
-    -- Off-screen indicator settings (Made by Blissful#4992)
+    -- Off-screen indicator settings
     OffScreenArrows = false,
     OffScreenArrowColor = Color3.fromRGB(255, 255, 255),
     OffScreenArrowSize = 16,
@@ -1044,7 +898,7 @@ local ESPSettings = {
     OffScreenArrowThickness = 1,
     OffScreenArrowAntiAliasing = false,
 
-    -- Radar settings (Made by Blissful#4992)
+    -- Radar settings
     Radar = false,
     RadarPosition = Vector2.new(200, 200),
     RadarRadius = 100,
@@ -1056,10 +910,10 @@ local ESPSettings = {
     RadarHealthColor = true
 }
 
+-- ESP Implementation
 local ESPObjects = {}
 local SkeletonESPObjects = {}
-local OffScreenArrowObjects = {} -- Track off-screen arrow objects
-local RadarObjects = {} -- Track radar objects
+local OffScreenArrowObjects = {}
 local ESPConnections = {} -- Track all ESP connections for cleanup
 local SkeletonESPConnections = {} -- Track all Skeleton ESP connections for cleanup
 local OffScreenArrowConnections = {} -- Track off-screen arrow connections for cleanup
@@ -1142,7 +996,7 @@ local function Visibility(state, lib)
     end
 end
 
--- Helper functions for off-screen arrows (Made by Blissful#4992)
+-- Helper functions for off-screen arrows
 local function GetRelative(pos, char)
     if not char then return Vector2.new(0,0) end
 
@@ -1166,9 +1020,9 @@ local function RotateVect(v, a)
 end
 
 local function DrawTriangle(color)
-    if not DrawingAvailable then return {Visible = false, Remove = function() end} end
+    if not DrawingAvailable or not DrawingLib then return {Visible = false, Remove = function() end} end
 
-    local l = Drawing.new("Triangle")
+    local l = DrawingLib.new("Triangle")
     l.Visible = false
     l.Color = color
     l.Filled = ESPSettings.OffScreenArrowFilled
@@ -1180,6 +1034,14 @@ end
 local function AntiA(v)
     if (not ESPSettings.OffScreenArrowAntiAliasing) then return v end
     return Vector2.new(math.round(v.x), math.round(v.y))
+end
+
+-- Function to get text bounds (simplified to avoid TextService errors)
+local function GetTextBounds(text, size, font)
+    -- Use simple approximation to avoid TextService issues
+    local charWidth = (size or 14) * 0.6 -- Approximate character width
+    local textLength = #tostring(text or "")
+    return Vector2.new(textLength * charWidth, size or 14)
 end
 
 local black = Color3.fromRGB(0, 0, 0)
@@ -1196,11 +1058,26 @@ local function ESP(plr)
         greenhealth = NewLine(1.5, black)
     }
 
+    -- Create text object for name display if Drawing library supports it
+    if DrawingLib and DrawingLib.new then
+        library.nameText = DrawingLib.new("Text")
+        if library.nameText then
+            library.nameText.Visible = false
+            library.nameText.Size = 14
+            library.nameText.Color = Color3.fromRGB(255, 255, 255)
+            library.nameText.Center = true
+            library.nameText.Outline = true
+            library.nameText.OutlineColor = Color3.fromRGB(0, 0, 0)
+            library.nameText.Font = 2 -- Enum.Font.SourceSansBold
+            library.nameText.Text = plr.Name
+        end
+    end
+
     ESPObjects[plr.Name] = library
 
     local function Colorize(color)
         for u, x in pairs(library) do
-            if x and x.Color and x ~= library.healthbar and x ~= library.greenhealth and x ~= library.blacktracer and x ~= library.black then
+            if x and x.Color and x ~= library.healthbar and x ~= library.greenhealth and x ~= library.blacktracer and x ~= library.black and x ~= library.nameText then
                 x.Color = color
             end
         end
@@ -1297,6 +1174,29 @@ local function ESP(plr)
                         end
                     end
 
+                    -- Names Display
+                    if ESPSettings.Names and library.nameText then
+                        library.nameText.Position = Vector2.new(HumPos.X, HumPos.Y - DistanceY*2 - 15)
+                        library.nameText.Visible = true
+
+                        -- Apply team colors to name if team check is enabled
+                        if ESPSettings.TeamCheck then
+                            if plr.TeamColor == player.TeamColor then
+                                library.nameText.Color = ESPSettings.Green
+                            else
+                                library.nameText.Color = ESPSettings.Red
+                            end
+                        elseif ESPSettings.TeamColor then
+                            library.nameText.Color = plr.TeamColor.Color
+                        else
+                            library.nameText.Color = Color3.fromRGB(255, 255, 255)
+                        end
+                    else
+                        if library.nameText then
+                            library.nameText.Visible = false
+                        end
+                    end
+
                     -- Team Check and Colors
                     if ESPSettings.TeamCheck then
                         if plr.TeamColor == player.TeamColor then
@@ -1320,21 +1220,22 @@ local function ESP(plr)
                     Visibility(false, library)
                 end
             else
-                Visibility(false, library)                if game.Players:FindFirstChild(plr.Name) == nil then
-                connection:Disconnect()
-                -- Remove from ESPConnections tracking
-                if ESPConnections[plr.Name] then
-                    ESPConnections[plr.Name] = nil
-                end
-                if ESPObjects[plr.Name] then
-                    for _, obj in pairs(ESPObjects[plr.Name]) do
-                        if obj and obj.Remove then
-                            obj:Remove()
-                        end
+                Visibility(false, library)
+                if game.Players:FindFirstChild(plr.Name) == nil then
+                    connection:Disconnect()
+                    -- Remove from ESPConnections tracking
+                    if ESPConnections[plr.Name] then
+                        ESPConnections[plr.Name] = nil
                     end
-                    ESPObjects[plr.Name] = nil
+                    if ESPObjects[plr.Name] then
+                        for _, obj in pairs(ESPObjects[plr.Name]) do
+                            if obj and obj.Remove then
+                                obj:Remove()
+                            end
+                        end
+                        ESPObjects[plr.Name] = nil
+                    end
                 end
-            end
             end
         end)
         -- Store connection for cleanup
@@ -1344,8 +1245,6 @@ local function ESP(plr)
 end
 
 -- Skeleton ESP Functions
-local SkeletonESPObjects = {}
-
 local function DrawSkeletonLine()
     if not DrawingAvailable or not DrawingLib then
         return {
@@ -1367,7 +1266,7 @@ local function DrawSkeletonLine()
     return l
 end
 
--- Off-screen arrows function (Made by Blissful#4992)
+-- Off-screen arrows function
 local function DrawOffScreenArrows(plr)
     if not DrawingAvailable then return end
 
@@ -1588,38 +1487,29 @@ local function DrawSkeletonESP(plr)
 
                         limbs.RightLowerLeg_RightFoot.From = Vector2.new(RLL.X, RLL.Y)
                         limbs.RightLowerLeg_RightFoot.To = Vector2.new(RF.X, RF.Y)
-                    end
 
-                    -- Apply colors
-                    if ESPSettings.TeamCheck then
-                        if plr.TeamColor == player.TeamColor then
-                            SkeletonColorize(ESPSettings.Green)
-                        else
-                            SkeletonColorize(ESPSettings.Red)
-                        end
-                    elseif ESPSettings.TeamColor then
-                        SkeletonColorize(plr.TeamColor.Color)
-                    else
-                        SkeletonColorize(ESPSettings.Skeleton_Color)
-                    end
-
-                    if limbs.Head_UpperTorso and limbs.Head_UpperTorso.Visible ~= true then
                         SkeletonVisibility(true)
+
+                        -- Team Check and Colors
+                        if ESPSettings.TeamCheck then
+                            if plr.TeamColor == player.TeamColor then
+                                SkeletonColorize(ESPSettings.Green)
+                            else
+                                SkeletonColorize(ESPSettings.Red)
+                            end
+                        elseif ESPSettings.TeamColor then
+                            SkeletonColorize(plr.TeamColor.Color)
+                        else
+                            SkeletonColorize(ESPSettings.Skeleton_Color)
+                        end
                     end
                 else
-                    if limbs.Head_UpperTorso and limbs.Head_UpperTorso.Visible ~= false then
-                        SkeletonVisibility(false)
-                    end
+                    SkeletonVisibility(false)
                 end
-            else                if limbs.Head_UpperTorso and limbs.Head_UpperTorso.Visible ~= false then
+            else
                 SkeletonVisibility(false)
-            end
                 if game.Players:FindFirstChild(plr.Name) == nil then
-                    for i, v in pairs(limbs) do
-                        if v and v.Remove then
-                            v:Remove()
-                        end
-                    end
+                    connection:Disconnect()
                     if SkeletonESPObjects[plr.Name] then
                         SkeletonESPObjects[plr.Name] = nil
                     end
@@ -1627,10 +1517,10 @@ local function DrawSkeletonESP(plr)
                     if SkeletonESPConnections[plr.Name .. "_skeleton"] then
                         SkeletonESPConnections[plr.Name .. "_skeleton"] = nil
                     end
-                    connection:Disconnect()                end
+                end
             end
         end)
-        -- Store skeleton connection for cleanup (R15)
+        -- Store connection for cleanup
         SkeletonESPConnections[plr.Name .. "_skeleton"] = connection
     end
 
@@ -1645,66 +1535,54 @@ local function DrawSkeletonESP(plr)
             if plr.Character ~= nil and plr.Character:FindFirstChild("Humanoid") ~= nil and plr.Character:FindFirstChild("HumanoidRootPart") ~= nil and plr.Character.Humanoid.Health > 0 then
                 local HUM, vis = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
                 if vis then
+                    -- Head
                     local H = camera:WorldToViewportPoint(plr.Character.Head.Position)
-                    if limbs.Head_Spine and limbs.Head_Spine.From then
-                        local T_Height = plr.Character.Torso.Size.Y/2 - 0.2
-                        local UT = camera:WorldToViewportPoint((plr.Character.Torso.CFrame * CFrame.new(0, T_Height, 0)).p)
-                        local LT = camera:WorldToViewportPoint((plr.Character.Torso.CFrame * CFrame.new(0, -T_Height, 0)).p)
+                    -- Torso
+                    local T = camera:WorldToViewportPoint(plr.Character.Torso.Position)
+                    -- Left Arm
+                    local LA = camera:WorldToViewportPoint(plr.Character["Left Arm"].Position)
+                    -- Right Arm
+                    local RA = camera:WorldToViewportPoint(plr.Character["Right Arm"].Position)
+                    -- Left Leg
+                    local LL = camera:WorldToViewportPoint(plr.Character["Left Leg"].Position)
+                    -- Right Leg
+                    local RL = camera:WorldToViewportPoint(plr.Character["Right Leg"].Position)
 
-                        local LA_Height = plr.Character["Left Arm"].Size.Y/2 - 0.2
-                        local LUA = camera:WorldToViewportPoint((plr.Character["Left Arm"].CFrame * CFrame.new(0, LA_Height, 0)).p)
-                        local LLA = camera:WorldToViewportPoint((plr.Character["Left Arm"].CFrame * CFrame.new(0, -LA_Height, 0)).p)
+                    -- Head
+                    limbs.Head_Spine.From = Vector2.new(H.X, H.Y)
+                    limbs.Head_Spine.To = Vector2.new(T.X, T.Y)
 
-                        local RA_Height = plr.Character["Right Arm"].Size.Y/2 - 0.2
-                        local RUA = camera:WorldToViewportPoint((plr.Character["Right Arm"].CFrame * CFrame.new(0, RA_Height, 0)).p)
-                        local RLA = camera:WorldToViewportPoint((plr.Character["Right Arm"].CFrame * CFrame.new(0, -RA_Height, 0)).p)
+                    -- Left Arm
+                    limbs.LeftArm.From = Vector2.new(LA.X, LA.Y)
+                    limbs.LeftArm.To = Vector2.new(LA.X, LA.Y)
 
-                        local LL_Height = plr.Character["Left Leg"].Size.Y/2 - 0.2
-                        local LUL = camera:WorldToViewportPoint((plr.Character["Left Leg"].CFrame * CFrame.new(0, LL_Height, 0)).p)
-                        local LLL = camera:WorldToViewportPoint((plr.Character["Left Leg"].CFrame * CFrame.new(0, -LL_Height, 0)).p)
+                    limbs.LeftArm_UpperTorso.From = Vector2.new(T.X, T.Y)
+                    limbs.LeftArm_UpperTorso.To = Vector2.new(LA.X, LA.Y)
 
-                        local RL_Height = plr.Character["Right Leg"].Size.Y/2 - 0.2
-                        local RUL = camera:WorldToViewportPoint((plr.Character["Right Leg"].CFrame * CFrame.new(0, RL_Height, 0)).p)
-                        local RLL = camera:WorldToViewportPoint((plr.Character["Right Leg"].CFrame * CFrame.new(0, -RL_Height, 0)).p)
+                    -- Right Arm
+                    limbs.RightArm.From = Vector2.new(RA.X, RA.Y)
+                    limbs.RightArm.To = Vector2.new(RA.X, RA.Y)
 
-                        -- Head
-                        limbs.Head_Spine.From = Vector2.new(H.X, H.Y)
-                        limbs.Head_Spine.To = Vector2.new(UT.X, UT.Y)
+                    limbs.RightArm_UpperTorso.From = Vector2.new(T.X, T.Y)
+                    limbs.RightArm_UpperTorso.To = Vector2.new(RA.X, RA.Y)
 
-                        --Spine
-                        limbs.Spine.From = Vector2.new(UT.X, UT.Y)
-                        limbs.Spine.To = Vector2.new(LT.X, LT.Y)
+                    -- Left Leg
+                    limbs.LeftLeg.From = Vector2.new(LL.X, LL.Y)
+                    limbs.LeftLeg.To = Vector2.new(LL.X, LL.Y)
 
-                        --Left Arm
-                        limbs.LeftArm.From = Vector2.new(LUA.X, LUA.Y)
-                        limbs.LeftArm.To = Vector2.new(LLA.X, LLA.Y)
+                    limbs.LeftLeg_LowerTorso.From = Vector2.new(T.X, T.Y)
+                    limbs.LeftLeg_LowerTorso.To = Vector2.new(LL.X, LL.Y)
 
-                        limbs.LeftArm_UpperTorso.From = Vector2.new(UT.X, UT.Y)
-                        limbs.LeftArm_UpperTorso.To = Vector2.new(LUA.X, LUA.Y)
+                    -- Right Leg
+                    limbs.RightLeg.From = Vector2.new(RL.X, RL.Y)
+                    limbs.RightLeg.To = Vector2.new(RL.X, RL.Y)
 
-                        --Right Arm
-                        limbs.RightArm.From = Vector2.new(RUA.X, RUA.Y)
-                        limbs.RightArm.To = Vector2.new(RLA.X, RLA.Y)
+                    limbs.RightLeg_LowerTorso.From = Vector2.new(T.X, T.Y)
+                    limbs.RightLeg_LowerTorso.To = Vector2.new(RL.X, RL.Y)
 
-                        limbs.RightArm_UpperTorso.From = Vector2.new(UT.X, UT.Y)
-                        limbs.RightArm_UpperTorso.To = Vector2.new(RUA.X, RUA.Y)
+                    SkeletonVisibility(true)
 
-                        --Left Leg
-                        limbs.LeftLeg.From = Vector2.new(LUL.X, LUL.Y)
-                        limbs.LeftLeg.To = Vector2.new(LLL.X, LLL.Y)
-
-                        limbs.LeftLeg_LowerTorso.From = Vector2.new(LT.X, LT.Y)
-                        limbs.LeftLeg_LowerTorso.To = Vector2.new(LUL.X, LUL.Y)
-
-                        --Right Leg
-                        limbs.RightLeg.From = Vector2.new(RUL.X, RUL.Y)
-                        limbs.RightLeg.To = Vector2.new(RLL.X, RLL.Y)
-
-                        limbs.RightLeg_LowerTorso.From = Vector2.new(LT.X, LT.Y)
-                        limbs.RightLeg_LowerTorso.To = Vector2.new(RUL.X, RUL.Y)
-                    end
-
-                    -- Apply colors
+                    -- Team Check and Colors
                     if ESPSettings.TeamCheck then
                         if plr.TeamColor == player.TeamColor then
                             SkeletonColorize(ESPSettings.Green)
@@ -1716,24 +1594,13 @@ local function DrawSkeletonESP(plr)
                     else
                         SkeletonColorize(ESPSettings.Skeleton_Color)
                     end
-
-                    if limbs.Head_Spine and limbs.Head_Spine.Visible ~= true then
-                        SkeletonVisibility(true)
-                    end
                 else
-                    if limbs.Head_Spine and limbs.Head_Spine.Visible ~= false then
-                        SkeletonVisibility(false)
-                    end
+                    SkeletonVisibility(false)
                 end
-            else                if limbs.Head_Spine and limbs.Head_Spine.Visible ~= false then
+            else
                 SkeletonVisibility(false)
-            end
                 if game.Players:FindFirstChild(plr.Name) == nil then
-                    for i, v in pairs(limbs) do
-                        if v and v.Remove then
-                            v:Remove()
-                        end
-                    end
+                    connection:Disconnect()
                     if SkeletonESPObjects[plr.Name] then
                         SkeletonESPObjects[plr.Name] = nil
                     end
@@ -1741,10 +1608,10 @@ local function DrawSkeletonESP(plr)
                     if SkeletonESPConnections[plr.Name .. "_skeleton"] then
                         SkeletonESPConnections[plr.Name .. "_skeleton"] = nil
                     end
-                    connection:Disconnect()                end
+                end
             end
         end)
-        -- Store skeleton connection for cleanup (R6)
+        -- Store connection for cleanup
         SkeletonESPConnections[plr.Name .. "_skeleton"] = connection
     end
 
@@ -1756,389 +1623,80 @@ local function DrawSkeletonESP(plr)
 end
 
 -- Initialize ESP for existing players
--- Radar implementation (Made by Blissful#4992)
-local function NewCircle(Transparency, Color, Radius, Filled, Thickness)
-    if not DrawingAvailable then return {Visible = false, Remove = function() end} end
-
-    local c = Drawing.new("Circle")
-    c.Transparency = Transparency
-    c.Color = Color
-    c.Visible = false
-    c.Thickness = Thickness
-    c.Position = Vector2.new(0, 0)
-    c.Radius = Radius
-    c.NumSides = math.clamp(Radius*55/100, 10, 75)
-    c.Filled = Filled
-    return c
+for _, plr in pairs(game:GetService("Players"):GetPlayers()) do
+    if plr ~= player then
+        ESP(plr)
+        DrawSkeletonESP(plr)
+        DrawOffScreenArrows(plr)
+    end
 end
 
-local function InitializeRadar()
-    if not DrawingAvailable then return end
-
-    -- Create radar background and border
-    local RadarBackground = NewCircle(0.9, ESPSettings.RadarBack, ESPSettings.RadarRadius, true, 1)
-    RadarBackground.Visible = ESPSettings.Radar
-    RadarBackground.Position = ESPSettings.RadarPosition
-
-    local RadarBorder = NewCircle(0.75, ESPSettings.RadarBorder, ESPSettings.RadarRadius, false, 3)
-    RadarBorder.Visible = ESPSettings.Radar
-    RadarBorder.Position = ESPSettings.RadarPosition
-
-    RadarObjects.Background = RadarBackground
-    RadarObjects.Border = RadarBorder
-
-    -- Helper function to get relative position
-    local function GetRelative(pos)
-        local char = player.Character
-        if char ~= nil and char.PrimaryPart ~= nil then
-            local pmpart = char.PrimaryPart
-            local camerapos = Vector3.new(camera.CFrame.Position.X, pmpart.Position.Y, camera.CFrame.Position.Z)
-            local newcf = CFrame.new(pmpart.Position, camerapos)
-            local r = newcf:PointToObjectSpace(pos)
-            return r.X, r.Z
-        else
-            return 0, 0
-        end
-    end
-
-    -- Create local player dot (triangle)
-    local function NewLocalDot()
-        if not DrawingAvailable then return {Visible = false, Remove = function() end} end
-
-        local d = Drawing.new("Triangle")
-        d.Visible = ESPSettings.Radar
-        d.Thickness = 1
-        d.Filled = true
-        d.Color = ESPSettings.RadarLocalPlayerDot
-        d.PointA = ESPSettings.RadarPosition + Vector2.new(0, -6)
-        d.PointB = ESPSettings.RadarPosition + Vector2.new(-3, 6)
-        d.PointC = ESPSettings.RadarPosition + Vector2.new(3, 6)
-        return d
-    end
-
-    local LocalPlayerDot = NewLocalDot()
-    RadarObjects.LocalDot = LocalPlayerDot
-
-    -- Function to place dots for other players
-    local function PlaceDot(plr)
-        if not DrawingAvailable then return end
-
-        local PlayerDot = NewCircle(1, ESPSettings.RadarPlayerDot, 3, true, 1)
-        RadarObjects[plr.Name] = PlayerDot
-
-        local function Update()
-            local connection = game:GetService("RunService").RenderStepped:Connect(function()
-                if not ESPSettings.Radar then
-                    PlayerDot.Visible = false
-                    return
-                end
-
-                local char = plr.Character
-                if char and char:FindFirstChildOfClass("Humanoid") and char.PrimaryPart ~= nil and char:FindFirstChildOfClass("Humanoid").Health > 0 then
-                    local hum = char:FindFirstChildOfClass("Humanoid")
-                    local scale = ESPSettings.RadarScale
-                    local relx, rely = GetRelative(char.PrimaryPart.Position)
-                    local newpos = ESPSettings.RadarPosition - Vector2.new(relx * scale, rely * scale)
-
-                    if (newpos - ESPSettings.RadarPosition).magnitude < ESPSettings.RadarRadius-2 then
-                        PlayerDot.Radius = 3
-                        PlayerDot.Position = newpos
-                        PlayerDot.Visible = true
-                    else
-                        local dist = (ESPSettings.RadarPosition - newpos).magnitude
-                        local calc = (ESPSettings.RadarPosition - newpos).unit * (dist - ESPSettings.RadarRadius)
-                        local inside = Vector2.new(newpos.X + calc.X, newpos.Y + calc.Y)
-                        PlayerDot.Radius = 2
-                        PlayerDot.Position = inside
-                        PlayerDot.Visible = true
-                    end
-
-                    -- Apply team color if enabled
-                    if ESPSettings.TeamCheck then
-                        if plr.TeamColor == player.TeamColor then
-                            PlayerDot.Color = ESPSettings.Green
-                        else
-                            PlayerDot.Color = ESPSettings.Red
-                        end
-                    elseif ESPSettings.TeamColor and plr.Team and plr.Team.TeamColor then
-                        PlayerDot.Color = plr.Team.TeamColor.Color
-                    else
-                        PlayerDot.Color = ESPSettings.RadarPlayerDot
-                    end
-
-                    -- Apply health color if enabled
-                    if ESPSettings.RadarHealthColor then
-                        local healthPercent = hum.Health / hum.MaxHealth
-                        PlayerDot.Color = Color3.fromRGB(
-                                255 * (1 - healthPercent),
-                                255 * healthPercent,
-                                0
-                        )
-                    end
-                else
-                    PlayerDot.Visible = false
-                    if not game.Players:FindFirstChild(plr.Name) then
-                        PlayerDot:Remove()
-                        RadarObjects[plr.Name] = nil
-                        if RadarConnections[plr.Name] then
-                            RadarConnections[plr.Name]:Disconnect()
-                            RadarConnections[plr.Name] = nil
-                        end
-                    end
-                end
-            end)
-
-            RadarConnections[plr.Name] = connection
-        end
-
-        coroutine.wrap(Update)()
-    end
-
-    -- Initialize dots for existing players
-    for _, v in pairs(game:GetService("Players"):GetPlayers()) do
-        if v.Name ~= player.Name then
-            PlaceDot(v)
-        end
-    end
-
-    -- Add dots for new players
-    local playerAddedConnection = game.Players.PlayerAdded:Connect(function(v)
-        if v.Name ~= player.Name then
-            PlaceDot(v)
-        end
-        -- Recreate local player dot when players join (to ensure it stays on top)
-        if LocalPlayerDot and LocalPlayerDot.Remove then
-            LocalPlayerDot:Remove()
-        end
-        LocalPlayerDot = NewLocalDot()
-        RadarObjects.LocalDot = LocalPlayerDot
-    end)
-    RadarConnections["PlayerAdded"] = playerAddedConnection
-
-    -- Update radar visuals
-    local radarUpdateConnection = game:GetService("RunService").RenderStepped:Connect(function()
-        if not ESPSettings.Radar then
-            RadarBackground.Visible = false
-            RadarBorder.Visible = false
-            if LocalPlayerDot then LocalPlayerDot.Visible = false end
-            return
-        end
-
-        if LocalPlayerDot then
-            LocalPlayerDot.Visible = true
-            LocalPlayerDot.Color = ESPSettings.RadarLocalPlayerDot
-            LocalPlayerDot.PointA = ESPSettings.RadarPosition + Vector2.new(0, -6)
-            LocalPlayerDot.PointB = ESPSettings.RadarPosition + Vector2.new(-3, 6)
-            LocalPlayerDot.PointC = ESPSettings.RadarPosition + Vector2.new(3, 6)
-        end
-
-        RadarBackground.Visible = true
-        RadarBackground.Position = ESPSettings.RadarPosition
-        RadarBackground.Radius = ESPSettings.RadarRadius
-        RadarBackground.Color = ESPSettings.RadarBack
-
-        RadarBorder.Visible = true
-        RadarBorder.Position = ESPSettings.RadarPosition
-        RadarBorder.Radius = ESPSettings.RadarRadius
-        RadarBorder.Color = ESPSettings.RadarBorder
-    end)
-    RadarConnections["RadarUpdate"] = radarUpdateConnection
-
-    -- Make radar draggable
-    local inset = game:GetService("GuiService"):GetGuiInset()
-    local dragging = false
-    local offset = Vector2.new(0, 0)
-
-    local dragBeginConnection = game:GetService("UserInputService").InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 and
-                (Vector2.new(mouse.X, mouse.Y + inset.Y) - ESPSettings.RadarPosition).magnitude < ESPSettings.RadarRadius then
-            offset = ESPSettings.RadarPosition - Vector2.new(mouse.X, mouse.Y)
-            dragging = true
-        end
-    end)
-    RadarConnections["DragBegin"] = dragBeginConnection
-
-    local dragEndConnection = game:GetService("UserInputService").InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
-    RadarConnections["DragEnd"] = dragEndConnection
-
-    -- Mouse indicator on radar
-    local mouseIndicatorConnection = game:GetService("RunService").RenderStepped:Connect(function()
-        if dragging then
-            ESPSettings.RadarPosition = Vector2.new(mouse.X, mouse.Y) + offset
-        end
-    end)
-    RadarConnections["MouseIndicator"] = mouseIndicatorConnection
-
-    -- Create mouse dot
-    local mouseDot = NewCircle(1, Color3.fromRGB(255, 255, 255), 3, true, 1)
-    RadarObjects.MouseDot = mouseDot
-
-    local mouseDotConnection = game:GetService("RunService").RenderStepped:Connect(function()
-        if ESPSettings.Radar and (Vector2.new(mouse.X, mouse.Y + inset.Y) - ESPSettings.RadarPosition).magnitude < ESPSettings.RadarRadius then
-            mouseDot.Position = Vector2.new(mouse.X, mouse.Y + inset.Y)
-            mouseDot.Visible = true
-        else
-            mouseDot.Visible = false
-        end
-    end)
-    RadarConnections["MouseDot"] = mouseDotConnection
-end
-
-local function InitializeESP()
-    if not DrawingAvailable then
-        Library:Notify({
-            Title = "ESP Unavailable",
-            Description = "Drawing API not available! ESP disabled.",
-            Time = 4,
-        })
-        return
-    end
-
-    for i, v in pairs(game:GetService("Players"):GetPlayers()) do
-        if v.Name ~= player.Name then
-            coroutine.wrap(ESP)(v)
-            if ESPSettings.Skeletons then
-                coroutine.wrap(DrawSkeletonESP)(v)
-            end
-            if ESPSettings.OffScreenArrows then
-                coroutine.wrap(DrawOffScreenArrows)(v)
-            end
-        end
-    end
-
-    -- Initialize radar
-    coroutine.wrap(InitializeRadar)()
-end
-
--- ESP for new players
-PlayerAddedConnection = game.Players.PlayerAdded:Connect(function(newplr)
-    if newplr.Name ~= player.Name and DrawingAvailable then
-        coroutine.wrap(ESP)(newplr)
-        if ESPSettings.Skeletons then
-            coroutine.wrap(DrawSkeletonESP)(newplr)
-        end
-        if ESPSettings.OffScreenArrows then
-            coroutine.wrap(DrawOffScreenArrows)(newplr)
-        end
+-- Initialize ESP for new players
+game:GetService("Players").PlayerAdded:Connect(function(plr)
+    if plr ~= player then
+        ESP(plr)
+        DrawSkeletonESP(plr)
+        DrawOffScreenArrows(plr)
     end
 end)
 
--- Function to clean up ESP objects and connections
-local function CleanupESP()
-    -- Disconnect all ESP connections
-    for playerName, connection in pairs(ESPConnections) do
-        if connection and connection.Disconnect then
-            pcall(function() connection:Disconnect() end)
-        end
-    end
-    ESPConnections = {}
+-- Radar implementation
+local function NewCircle(transparency, color, radius, filled, thickness)
+    if not DrawingAvailable or not DrawingLib then return {Visible = false, Remove = function() end} end
 
-    -- Disconnect all Skeleton ESP connections
-    for connectionKey, connection in pairs(SkeletonESPConnections) do
-        if connection and connection.Disconnect then
-            pcall(function() connection:Disconnect() end)
-        end
-    end
-    SkeletonESPConnections = {}
-
-    -- Disconnect all Off-Screen Arrow connections
-    for playerName, connection in pairs(OffScreenArrowConnections) do
-        if connection and connection.Disconnect then
-            pcall(function() connection:Disconnect() end)
-        end
-    end
-    OffScreenArrowConnections = {}
-
-    -- Clean up Off-Screen Arrow objects
-    for playerName, arrow in pairs(OffScreenArrowObjects) do
-        if arrow and arrow.Remove then
-            pcall(function() arrow:Remove() end)
-        end
-    end
-    OffScreenArrowObjects = {}
-
-    -- Clean up Radar objects
-    for key, obj in pairs(RadarObjects) do
-        if obj and obj.Remove then
-            pcall(function() obj:Remove() end)
-        end
-    end
-    RadarObjects = {}
-
-    -- Disconnect Radar connections
-    for key, connection in pairs(RadarConnections) do
-        if connection and connection.Disconnect then
-            pcall(function() connection:Disconnect() end)
-        end
-    end
-    RadarConnections = {}
-
-    -- Clean up ESP objects
-    for playerName, espLib in pairs(ESPObjects) do
-        for _, obj in pairs(espLib) do
-            if obj and obj.Remove then
-                pcall(function() obj:Remove() end)
-            end
-        end
-    end
-    ESPObjects = {}
-
-    -- Clean up Skeleton ESP objects
-    for playerName, skelLib in pairs(SkeletonESPObjects) do
-        for _, obj in pairs(skelLib) do
-            if obj and obj.Remove then
-                pcall(function() obj:Remove() end)
-            end
-        end
-    end
-    SkeletonESPObjects = {}
+    local c = DrawingLib.new("Circle")
+    c.Visible = false
+    c.Color = color
+    c.Radius = radius
+    c.Filled = filled
+    c.Thickness = thickness
+    c.Transparency = transparency
+    c.NumSides = 64
+    return c
 end
 
--- ESP UI Controls
-local ESPGroup = Tabs.ESP:AddLeftGroupbox("ESP Settings", "eye")
+-- Initialize radar
+local RadarBackground = NewCircle(0.9, ESPSettings.RadarBack, ESPSettings.RadarRadius, true, 1)
+RadarBackground.Visible = ESPSettings.Radar
+RadarBackground.Position = ESPSettings.RadarPosition
 
-if not DrawingAvailable then
-    ESPGroup:AddLabel("⚠️ Drawing API not available!")
-    ESPGroup:AddLabel("ESP features require an executor")
-    ESPGroup:AddLabel("that supports the Drawing library.")
-end
+local RadarBorder = NewCircle(0.75, ESPSettings.RadarBorder, ESPSettings.RadarRadius, false, 3)
+RadarBorder.Visible = ESPSettings.Radar
+RadarBorder.Position = ESPSettings.RadarPosition
 
-ESPGroup:AddToggle("ESPEnabled", {
-    Text = "Enable ESP",
+-- ESP Settings Section
+local ESPSection = ESPTab:Section({
+    Name = "ESP Settings"
+})
+
+ESPSection:Toggle({
+    Name = "Enable ESP",
     Default = ESPSettings.Enabled,
-    Disabled = not DrawingAvailable,
     Callback = function(Value)
         ESPSettings.Enabled = Value
         if Value then
-            InitializeESP()
+            -- Initialize ESP
             Library:Notify({
-                Title = "ESP Enabled",
-                Description = "All ESP features are now active",
-                Time = 2,
+                Name = "ESP Enabled",
+                Text = "All ESP features are now active",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         else
-            -- Clean up ESP objects and connections when disabled
-            CleanupESP()
+            -- Clean up ESP
             Library:Notify({
-                Title = "ESP Disabled",
-                Description = "All ESP features are now inactive",
-                Time = 2,
+                Name = "ESP Disabled",
+                Text = "All ESP features are now inactive",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         end
     end,
 })
 
--- Create a dropdown for ESP presets
-ESPGroup:AddDropdown("ESPPreset", {
-    Values = { "Default", "Competitive", "Stealth", "Colorful", "Minimal", "Custom" },
-    Default = "Default",
-    Text = "ESP Preset",
-    Tooltip = "Quick presets for different ESP styles",
-    Disabled = not DrawingAvailable,
+ESPSection:Dropdown({
+    Name = "ESP Preset",
+    Items = { "Default", "Competitive", "Stealth", "Colorful", "Minimal", "Custom" },
     Callback = function(Value)
         if Value == "Default" then
             -- Default settings
@@ -2240,1033 +1798,523 @@ ESPGroup:AddDropdown("ESPPreset", {
             ESPSettings.TeamColor = false
         end
 
-        -- Update UI elements to reflect the new settings
-        Toggles.ESPBoxes:SetValue(ESPSettings.Boxes)
-        Toggles.ESPTracers:SetValue(ESPSettings.Tracers)
-        Toggles.ESPHealthBars:SetValue(ESPSettings.HealthBars)
-        Toggles.ESPSkeletons:SetValue(ESPSettings.Skeletons)
-        Toggles.ESPOffScreenArrows:SetValue(ESPSettings.OffScreenArrows)
-        if Toggles.ESPNames then Toggles.ESPNames:SetValue(ESPSettings.Names) end
-        if Toggles.ESPDistances then Toggles.ESPDistances:SetValue(ESPSettings.Distances) end
-        if Toggles.ESPWeapons then Toggles.ESPWeapons:SetValue(ESPSettings.Weapons) end
-        if Toggles.ESPChams then Toggles.ESPChams:SetValue(ESPSettings.Chams) end
-
-        -- Initialize ESP with new settings
-        if ESPSettings.Enabled then
-            InitializeESP()
-        end
-
         Library:Notify({
-            Title = "ESP Preset Applied",
-            Description = Value .. " preset has been applied",
-            Time = 2,
+            Name = "ESP Preset Applied",
+            Text = Value .. " preset has been applied",
+            Icon = "rbxassetid://11401835376",
+            Duration = 2,
         })
     end,
 })
 
-ESPGroup:AddToggle("ESPBoxes", {
-    Text = "Show Boxes",
+ESPSection:Toggle({
+    Name = "Show Boxes",
     Default = ESPSettings.Boxes,
-    Disabled = not DrawingAvailable,
     Callback = function(Value)
         ESPSettings.Boxes = Value
     end,
 })
 
-ESPGroup:AddToggle("ESPTracers", {
-    Text = "Show Tracers",
+ESPSection:Toggle({
+    Name = "Show Tracers",
     Default = ESPSettings.Tracers,
-    Disabled = not DrawingAvailable,
     Callback = function(Value)
         ESPSettings.Tracers = Value
     end,
 })
 
-ESPGroup:AddToggle("ESPHealthBars", {
-    Text = "Show Health Bars",
+ESPSection:Toggle({
+    Name = "Show Health Bars",
     Default = ESPSettings.HealthBars,
-    Disabled = not DrawingAvailable,
     Callback = function(Value)
         ESPSettings.HealthBars = Value
     end,
 })
 
-ESPGroup:AddToggle("ESPSkeletons", {
-    Text = "Show Skeletons",
+ESPSection:Toggle({
+    Name = "Show Skeletons",
     Default = ESPSettings.Skeletons,
-    Disabled = not DrawingAvailable,
     Callback = function(Value)
         ESPSettings.Skeletons = Value
-        if Value and DrawingAvailable then
-            -- Initialize skeleton ESP for existing players
-            for i, v in pairs(game:GetService("Players"):GetPlayers()) do
-                if v.Name ~= player.Name and not SkeletonESPObjects[v.Name] then
-                    coroutine.wrap(DrawSkeletonESP)(v)
-                end
-            end
-        end
     end,
 })
 
--- Off-screen arrows toggle (Made by Blissful#4992)
-ESPGroup:AddToggle("ESPOffScreenArrows", {
-    Text = "Show Off-Screen Arrows",
+ESPSection:Toggle({
+    Name = "Show Off-Screen Arrows",
     Default = ESPSettings.OffScreenArrows,
-    Disabled = not DrawingAvailable,
     Callback = function(Value)
         ESPSettings.OffScreenArrows = Value
-        if Value and DrawingAvailable then
-            -- Initialize off-screen arrows for existing players
-            for i, v in pairs(game:GetService("Players"):GetPlayers()) do
-                if v.Name ~= player.Name and not OffScreenArrowObjects[v.Name] then
-                    coroutine.wrap(DrawOffScreenArrows)(v)
-                end
-            end
-        end
     end,
 })
 
--- Add new ESP features
-ESPGroup:AddToggle("ESPNames", {
-    Text = "Show Names",
-    Default = ESPSettings.Names or false,
-    Disabled = not DrawingAvailable,
+ESPSection:Toggle({
+    Name = "Show Names",
+    Default = ESPSettings.Names,
     Callback = function(Value)
         ESPSettings.Names = Value
     end,
 })
 
-ESPGroup:AddToggle("ESPDistances", {
-    Text = "Show Distances",
-    Default = ESPSettings.Distances or false,
-    Disabled = not DrawingAvailable,
+ESPSection:Toggle({
+    Name = "Show Distances",
+    Default = ESPSettings.Distances,
     Callback = function(Value)
         ESPSettings.Distances = Value
     end,
 })
 
-ESPGroup:AddToggle("ESPWeapons", {
-    Text = "Show Weapons",
-    Default = ESPSettings.Weapons or false,
-    Disabled = not DrawingAvailable,
+ESPSection:Toggle({
+    Name = "Show Weapons",
+    Default = ESPSettings.Weapons,
     Callback = function(Value)
         ESPSettings.Weapons = Value
     end,
 })
 
-ESPGroup:AddToggle("ESPChams", {
-    Text = "Show Chams",
-    Default = ESPSettings.Chams or false,
-    Disabled = not DrawingAvailable,
-    Tooltip = "Highlight players through walls",
+ESPSection:Toggle({
+    Name = "Show Chams",
+    Default = ESPSettings.Chams,
     Callback = function(Value)
         ESPSettings.Chams = Value
-
-        -- Initialize chams if enabled
-        if Value and DrawingAvailable then
-            if not getgenv().ChamsInitialized then
-                getgenv().ChamsInitialized = true
-
-                -- Create chams function
-                getgenv().UpdateChams = function()
-                    for _, plr in pairs(game:GetService("Players"):GetPlayers()) do
-                        if plr ~= player and plr.Character then
-                            -- Check if chams already exist for this player
-                            if not getgenv().ChamsObjects then getgenv().ChamsObjects = {} end
-
-                            if not getgenv().ChamsObjects[plr.Name] then
-                                getgenv().ChamsObjects[plr.Name] = {}
-
-                                -- Create highlight for the character
-                                local highlight = Instance.new("Highlight")
-                                highlight.FillColor = ESPSettings.TeamCheck and
-                                    (plr.TeamColor == player.TeamColor and ESPSettings.Green or ESPSettings.Red) or
-                                    (ESPSettings.TeamColor and plr.TeamColor.Color or Color3.fromRGB(255, 0, 0))
-                                highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
-                                highlight.FillTransparency = 0.5
-                                highlight.OutlineTransparency = 0
-                                highlight.Adornee = plr.Character
-                                highlight.Parent = game:GetService("CoreGui")
-
-                                getgenv().ChamsObjects[plr.Name].Highlight = highlight
-                            else
-                                -- Update existing highlight
-                                local highlight = getgenv().ChamsObjects[plr.Name].Highlight
-                                if highlight and highlight.Parent then
-                                    highlight.FillColor = ESPSettings.TeamCheck and
-                                        (plr.TeamColor == player.TeamColor and ESPSettings.Green or ESPSettings.Red) or
-                                        (ESPSettings.TeamColor and plr.TeamColor.Color or Color3.fromRGB(255, 0, 0))
-                                    highlight.Adornee = plr.Character
-                                end
-                            end
-                        end
-                    end
-                end
-
-                -- Clean up chams function
-                getgenv().CleanupChams = function()
-                    if getgenv().ChamsObjects then
-                        for _, chamObj in pairs(getgenv().ChamsObjects) do
-                            if chamObj.Highlight and chamObj.Highlight.Parent then
-                                chamObj.Highlight:Destroy()
-                            end
-                        end
-                        getgenv().ChamsObjects = {}
-                    end
-                end
-
-                -- Run update chams
-                getgenv().UpdateChams()
-            else
-                -- If already initialized, just update
-                if getgenv().UpdateChams then
-                    getgenv().UpdateChams()
-                end
-            end
-        else
-            -- Clean up chams if disabled
-            if getgenv().CleanupChams then
-                getgenv().CleanupChams()
-            end
-        end
     end,
 })
 
-ESPGroup:AddDropdown("TracerOrigin", {
-    Values = { "Bottom", "Middle" },
-    Default = ESPSettings.Tracer_Origin,
-    Text = "Tracer Origin",
-    Disabled = not DrawingAvailable,
+ESPSection:Dropdown({
+    Name = "Tracer Origin",
+    Items = { "Bottom", "Middle" },
     Callback = function(Value)
         ESPSettings.Tracer_Origin = Value
     end,
 })
 
-ESPGroup:AddToggle("TracerFollowMouse", {
-    Text = "Tracer Follow Mouse",
+ESPSection:Toggle({
+    Name = "Tracer Follow Mouse",
     Default = ESPSettings.Tracer_FollowMouse,
-    Disabled = not DrawingAvailable,
     Callback = function(Value)
         ESPSettings.Tracer_FollowMouse = Value
     end,
 })
 
-ESPGroup:AddSlider("BoxThickness", {
-    Text = "Box Thickness",
-    Default = ESPSettings.Box_Thickness,
-    Min = 1,
+ESPSection:Slider({
+    Name = "Box Thickness",
     Max = 5,
-    Rounding = 0,
-    Disabled = not DrawingAvailable,
+    Min = 1,
+    Default = ESPSettings.Box_Thickness,
     Callback = function(Value)
         ESPSettings.Box_Thickness = Value
-        -- Update thickness for all existing ESP objects
-        for _, lib in pairs(ESPObjects) do
-            if lib.box and lib.box.Thickness then
-                lib.box.Thickness = Value
-                lib.black.Thickness = Value * 2
-            end
-        end
     end,
 })
 
-ESPGroup:AddSlider("TracerThickness", {
-    Text = "Tracer Thickness",
-    Default = ESPSettings.Tracer_Thickness,
-    Min = 1,
+ESPSection:Slider({
+    Name = "Tracer Thickness",
     Max = 5,
-    Rounding = 0,
-    Disabled = not DrawingAvailable,
+    Min = 1,
+    Default = ESPSettings.Tracer_Thickness,
     Callback = function(Value)
         ESPSettings.Tracer_Thickness = Value
-        -- Update thickness for all existing ESP objects
-        for _, lib in pairs(ESPObjects) do
-            if lib.tracer and lib.tracer.Thickness then
-                lib.tracer.Thickness = Value
-                lib.blacktracer.Thickness = Value * 2
-            end
-        end
     end,
 })
 
-ESPGroup:AddSlider("SkeletonThickness", {
-    Text = "Skeleton Thickness",
-    Default = ESPSettings.Skeleton_Thickness,
-    Min = 1,
+ESPSection:Slider({
+    Name = "Skeleton Thickness",
     Max = 5,
-    Rounding = 0,
-    Disabled = not DrawingAvailable,
+    Min = 1,
+    Default = ESPSettings.Skeleton_Thickness,
     Callback = function(Value)
         ESPSettings.Skeleton_Thickness = Value
-        -- Update thickness for all existing skeleton objects
-        for _, lib in pairs(SkeletonESPObjects) do
-            for _, line in pairs(lib) do
-                if line and line.Thickness then
-                    line.Thickness = Value
-                end
-            end
-        end
     end,
 })
 
--- Off-screen arrow sliders (Made by Blissful#4992)
-ESPGroup:AddSlider("OffScreenArrowSize", {
-    Text = "Off-Screen Arrow Size",
-    Default = ESPSettings.OffScreenArrowSize,
-    Min = 8,
-    Max = 32,
-    Rounding = 0,
-    Disabled = not DrawingAvailable,
-    Callback = function(Value)
-        ESPSettings.OffScreenArrowSize = Value
-    end,
+-- ESP Colors Section
+local ESPColorsSection = ESPTab:Section({
+    Name = "ESP Colors"
 })
 
-ESPGroup:AddSlider("OffScreenArrowRadius", {
-    Text = "Off-Screen Arrow Distance",
-    Default = ESPSettings.OffScreenArrowRadius,
-    Min = 40,
-    Max = 200,
-    Rounding = 0,
-    Disabled = not DrawingAvailable,
-    Callback = function(Value)
-        ESPSettings.OffScreenArrowRadius = Value
-    end,
-})
-
-ESPGroup:AddSlider("OffScreenArrowThickness", {
-    Text = "Off-Screen Arrow Thickness",
-    Default = ESPSettings.OffScreenArrowThickness,
-    Min = 1,
-    Max = 5,
-    Rounding = 0,
-    Disabled = not DrawingAvailable,
-    Callback = function(Value)
-        ESPSettings.OffScreenArrowThickness = Value
-        -- Update thickness for all existing arrow objects
-        for _, arrow in pairs(OffScreenArrowObjects) do
-            if arrow and arrow.Thickness then
-                arrow.Thickness = Value
-            end
-        end
-    end,
-})
-
-ESPGroup:AddToggle("OffScreenArrowFilled", {
-    Text = "Filled Arrows",
-    Default = ESPSettings.OffScreenArrowFilled,
-    Disabled = not DrawingAvailable,
-    Callback = function(Value)
-        ESPSettings.OffScreenArrowFilled = Value
-        -- Update filled state for all existing arrow objects
-        for _, arrow in pairs(OffScreenArrowObjects) do
-            if arrow and arrow.Filled ~= nil then
-                arrow.Filled = Value
-            end
-        end
-    end,
-})
-
-ESPGroup:AddSlider("OffScreenArrowTransparency", {
-    Text = "Arrow Transparency",
-    Default = ESPSettings.OffScreenArrowTransparency,
-    Min = 0,
-    Max = 1,
-    Rounding = 2,
-    Disabled = not DrawingAvailable,
-    Callback = function(Value)
-        ESPSettings.OffScreenArrowTransparency = Value
-        -- Update transparency for all existing arrow objects
-        for _, arrow in pairs(OffScreenArrowObjects) do
-            if arrow and arrow.Transparency ~= nil then
-                arrow.Transparency = 1-Value
-            end
-        end
-    end,
-})
-
-ESPGroup:AddToggle("OffScreenArrowAntiAliasing", {
-    Text = "Anti-Aliasing",
-    Default = ESPSettings.OffScreenArrowAntiAliasing,
-    Disabled = not DrawingAvailable,
-    Callback = function(Value)
-        ESPSettings.OffScreenArrowAntiAliasing = Value
-    end,
-})
-
--- Radar toggle and settings (Made by Blissful#4992)
-ESPGroup:AddDivider()
-ESPGroup:AddLabel("Radar Settings")
-
-ESPGroup:AddToggle("RadarEnabled", {
-    Text = "Show Radar",
-    Default = ESPSettings.Radar,
-    Disabled = not DrawingAvailable,
-    Callback = function(Value)
-        ESPSettings.Radar = Value
-    end,
-})
-
-ESPGroup:AddToggle("RadarHealthColor", {
-    Text = "Health-Based Colors",
-    Default = ESPSettings.RadarHealthColor,
-    Disabled = not DrawingAvailable,
-    Callback = function(Value)
-        ESPSettings.RadarHealthColor = Value
-    end,
-})
-
-ESPGroup:AddSlider("RadarRadius", {
-    Text = "Radar Size",
-    Default = ESPSettings.RadarRadius,
-    Min = 50,
-    Max = 200,
-    Rounding = 0,
-    Disabled = not DrawingAvailable,
-    Callback = function(Value)
-        ESPSettings.RadarRadius = Value
-    end,
-})
-
-ESPGroup:AddSlider("RadarScale", {
-    Text = "Radar Scale",
-    Default = ESPSettings.RadarScale,
-    Min = 0.5,
-    Max = 5,
-    Rounding = 1,
-    Disabled = not DrawingAvailable,
-    Callback = function(Value)
-        ESPSettings.RadarScale = Value
-    end,
-})
-
--- ESP Colors Group
-local ESPColorsGroup = Tabs.ESP:AddRightGroupbox("ESP Colors", "palette")
-
--- Create toggles first, then add color pickers to them
-local BoxColorToggle = ESPColorsGroup:AddToggle("CustomBoxColor", {
-    Text = "Custom Box Color",
+ESPColorsSection:Toggle({
+    Name = "Custom Box Color",
     Default = true,
-    Tooltip = "Use custom color for ESP boxes",
     Callback = function(Value)
-        -- Color customization toggle
+        ESPSettings.UseCustomBoxColor = Value
     end,
 })
 
-BoxColorToggle:AddColorPicker("ESPBoxColor", {
-    Default = ESPSettings.Box_Color,
-    Title = "ESP Box Color",
-    Callback = function(Value)
-        ESPSettings.Box_Color = Value
+ESPColorsSection:Colorpicker({
+    Name = "ESP Box Color",
+    DefaultColor = ESPSettings.Box_Color,
+    Callback = function(Color)
+        ESPSettings.Box_Color = Color
     end,
 })
 
-local TracerColorToggle = ESPColorsGroup:AddToggle("CustomTracerColor", {
-    Text = "Custom Tracer Color",
+ESPColorsSection:Toggle({
+    Name = "Custom Tracer Color",
     Default = true,
-    Tooltip = "Use custom color for ESP tracers",
     Callback = function(Value)
-        -- Color customization toggle
+        ESPSettings.UseCustomTracerColor = Value
     end,
 })
 
-TracerColorToggle:AddColorPicker("ESPTracerColor", {
-    Default = ESPSettings.Tracer_Color,
-    Title = "ESP Tracer Color",
-    Callback = function(Value)
-        ESPSettings.Tracer_Color = Value
+ESPColorsSection:Colorpicker({
+    Name = "ESP Tracer Color",
+    DefaultColor = ESPSettings.Tracer_Color,
+    Callback = function(Color)
+        ESPSettings.Tracer_Color = Color
     end,
 })
 
-local SkeletonColorToggle = ESPColorsGroup:AddToggle("CustomSkeletonColor", {
-    Text = "Custom Skeleton Color",
+ESPColorsSection:Toggle({
+    Name = "Custom Skeleton Color",
     Default = true,
-    Tooltip = "Use custom color for ESP skeletons",
     Callback = function(Value)
-        -- Color customization toggle
+        ESPSettings.UseCustomSkeletonColor = Value
     end,
 })
 
-SkeletonColorToggle:AddColorPicker("ESPSkeletonColor", {
-    Default = ESPSettings.Skeleton_Color,
-    Title = "ESP Skeleton Color",
-    Callback = function(Value)
-        ESPSettings.Skeleton_Color = Value
+ESPColorsSection:Colorpicker({
+    Name = "ESP Skeleton Color",
+    DefaultColor = ESPSettings.Skeleton_Color,
+    Callback = function(Color)
+        ESPSettings.Skeleton_Color = Color
     end,
 })
 
--- Off-screen arrow color toggle (Made by Blissful#4992)
-local ArrowColorToggle = ESPColorsGroup:AddToggle("CustomArrowColor", {
-    Text = "Custom Arrow Color",
-    Default = true,
-    Tooltip = "Use custom color for off-screen arrows",
-    Callback = function(Value)
-        -- Color customization toggle
-    end,
-})
-
-ArrowColorToggle:AddColorPicker("ESPArrowColor", {
-    Default = ESPSettings.OffScreenArrowColor,
-    Title = "Off-Screen Arrow Color",
-    Callback = function(Value)
-        ESPSettings.OffScreenArrowColor = Value
-        -- Update color for all existing arrow objects
-        for _, arrow in pairs(OffScreenArrowObjects) do
-            if arrow and arrow.Color ~= nil then
-                arrow.Color = Value
-            end
-        end
-    end,
-})
-
-ESPColorsGroup:AddDivider()
-
-ESPColorsGroup:AddToggle("ESPTeamCheck", {
-    Text = "Team Check",
+ESPColorsSection:Toggle({
+    Name = "Team Check",
     Default = ESPSettings.TeamCheck,
-    Tooltip = "Use different colors for teammates and enemies",
     Callback = function(Value)
         ESPSettings.TeamCheck = Value
     end,
 })
 
-ESPColorsGroup:AddToggle("ESPTeamColor", {
-    Text = "Team Color",
+ESPColorsSection:Toggle({
+    Name = "Team Color",
     Default = ESPSettings.TeamColor,
-    Tooltip = "Use player's team color",
     Callback = function(Value)
         ESPSettings.TeamColor = Value
     end,
 })
 
-local TeamColorToggle = ESPColorsGroup:AddToggle("CustomTeamColors", {
-    Text = "Custom Team Colors",
-    Default = true,
-    Tooltip = "Customize teammate and enemy colors",
-    Callback = function(Value)
-        -- Team color customization toggle
+ESPColorsSection:Colorpicker({
+    Name = "Teammate Color",
+    DefaultColor = ESPSettings.Green,
+    Callback = function(Color)
+        ESPSettings.Green = Color
     end,
 })
 
-TeamColorToggle:AddColorPicker("ESPTeamGreen", {
-    Default = ESPSettings.Green,
-    Title = "Teammate Color",
-    Callback = function(Value)
-        ESPSettings.Green = Value
-    end,
-})
-
-TeamColorToggle:AddColorPicker("ESPTeamRed", {
-    Default = ESPSettings.Red,
-    Title = "Enemy Color",
-    Callback = function(Value)
-        ESPSettings.Red = Value
-    end,
-})
-
--- Radar Colors (Made by Blissful#4992)
-ESPColorsGroup:AddDivider()
-ESPColorsGroup:AddLabel("Radar Colors")
-
-local RadarBackToggle = ESPColorsGroup:AddToggle("CustomRadarBack", {
-    Text = "Radar Background",
-    Default = true,
-    Tooltip = "Customize radar background color",
-    Callback = function(Value)
-        -- Color customization toggle
-    end,
-})
-
-RadarBackToggle:AddColorPicker("RadarBackColor", {
-    Default = ESPSettings.RadarBack,
-    Title = "Radar Background Color",
-    Callback = function(Value)
-        ESPSettings.RadarBack = Value
-    end,
-})
-
-local RadarBorderToggle = ESPColorsGroup:AddToggle("CustomRadarBorder", {
-    Text = "Radar Border",
-    Default = true,
-    Tooltip = "Customize radar border color",
-    Callback = function(Value)
-        -- Color customization toggle
-    end,
-})
-
-RadarBorderToggle:AddColorPicker("RadarBorderColor", {
-    Default = ESPSettings.RadarBorder,
-    Title = "Radar Border Color",
-    Callback = function(Value)
-        ESPSettings.RadarBorder = Value
-    end,
-})
-
-local RadarLocalDotToggle = ESPColorsGroup:AddToggle("CustomRadarLocalDot", {
-    Text = "Local Player Dot",
-    Default = true,
-    Tooltip = "Customize local player dot color",
-    Callback = function(Value)
-        -- Color customization toggle
-    end,
-})
-
-RadarLocalDotToggle:AddColorPicker("RadarLocalDotColor", {
-    Default = ESPSettings.RadarLocalPlayerDot,
-    Title = "Local Player Dot Color",
-    Callback = function(Value)
-        ESPSettings.RadarLocalPlayerDot = Value
-    end,
-})
-
-local RadarPlayerDotToggle = ESPColorsGroup:AddToggle("CustomRadarPlayerDot", {
-    Text = "Player Dots",
-    Default = true,
-    Tooltip = "Customize player dots color",
-    Callback = function(Value)
-        -- Color customization toggle
-    end,
-})
-
-RadarPlayerDotToggle:AddColorPicker("RadarPlayerDotColor", {
-    Default = ESPSettings.RadarPlayerDot,
-    Title = "Player Dots Color",
-    Callback = function(Value)
-        ESPSettings.RadarPlayerDot = Value
+ESPColorsSection:Colorpicker({
+    Name = "Enemy Color",
+    DefaultColor = ESPSettings.Red,
+    Callback = function(Color)
+        ESPSettings.Red = Color
     end,
 })
 
 -- Players Tab
-local PlayersGroup = Tabs.Players:AddLeftGroupbox("Player Management", "users")
+local PlayersSection = PlayersTab:Section({
+    Name = "Player Management"
+})
 
--- Use Obsidian's special Player dropdown that auto-updates
-local PlayerSelector = PlayersGroup:AddDropdown("PlayerList", {
-    SpecialType = "Player",
-    Text = "Select Player",
-    ExcludeLocalPlayer = true,
-    Tooltip = "Select a player to target or manage",
+-- Create a dropdown for player selection
+local playerList = {}
+for _, player in pairs(game:GetService("Players"):GetPlayers()) do
+    if player ~= game:GetService("Players").LocalPlayer then
+        table.insert(playerList, player.Name)
+    end
+end
+
+PlayersSection:Dropdown({
+    Name = "Select Player",
+    Items = playerList,
     Callback = function(Value)
         getgenv().SelectedPlayer = Value
-        print("Selected player:", Value)
     end,
 })
 
-PlayersGroup:AddButton({
-    Text = "Blacklist Player",
-    Func = function()
+PlayersSection:Button({
+    Name = "Blacklist Player",
+    Callback = function()
         if getgenv().SelectedPlayer then
             AimbotModule:Blacklist(getgenv().SelectedPlayer)
             Library:Notify({
-                Title = "Player Blacklisted",
-                Description = "Blacklisted: " .. getgenv().SelectedPlayer,
-                Time = 3,
+                Name = "Player Blacklisted",
+                Text = "Blacklisted: " .. getgenv().SelectedPlayer,
+                Icon = "rbxassetid://11401835376",
+                Duration = 3,
             })
         else
             Library:Notify({
-                Title = "No Player Selected",
-                Description = "Please select a player first!",
-                Time = 2,
+                Name = "No Player Selected",
+                Text = "Please select a player first!",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         end
     end,
-    Tooltip = "Blacklist the selected player from aimbot targeting",
 })
 
-PlayersGroup:AddButton({
-    Text = "Whitelist Player",
-    Func = function()
+PlayersSection:Button({
+    Name = "Whitelist Player",
+    Callback = function()
         if getgenv().SelectedPlayer then
             pcall(function()
                 AimbotModule:Whitelist(getgenv().SelectedPlayer)
                 Library:Notify({
-                    Title = "Player Whitelisted",
-                    Description = "Whitelisted: " .. getgenv().SelectedPlayer,
-                    Time = 3,
+                    Name = "Player Whitelisted",
+                    Text = "Whitelisted: " .. getgenv().SelectedPlayer,
+                    Icon = "rbxassetid://11401835376",
+                    Duration = 3,
                 })
             end)
         else
             Library:Notify({
-                Title = "No Player Selected",
-                Description = "Please select a player first!",
-                Time = 2,
+                Name = "No Player Selected",
+                Text = "Please select a player first!",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         end
     end,
-    Tooltip = "Remove player from blacklist",
 })
 
 -- Control Buttons
-local ControlGroup = Tabs.Players:AddRightGroupbox("Aimbot Control", "play")
+local ControlSection = PlayersTab:Section({
+    Name = "Aimbot Control"
+})
 
-ControlGroup:AddButton({
-    Text = "Start Aimbot",
-    Func = function()
+ControlSection:Button({
+    Name = "Start Aimbot",
+    Callback = function()
         if not AimbotModule.Loaded then
             AimbotModule.Load()
             Library:Notify({
-                Title = "Aimbot Started",
-                Description = "Aimbot module initialized successfully!",
-                Time = 3,
+                Name = "Aimbot Started",
+                Text = "Aimbot module initialized successfully!",
+                Icon = "rbxassetid://11401835376",
+                Duration = 3,
             })
         else
             Library:Notify({
-                Title = "Already Running",
-                Description = "Aimbot is already active!",
-                Time = 2,
+                Name = "Already Running",
+                Text = "Aimbot is already active!",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         end
     end,
-    Tooltip = "Initialize and start the aimbot",
 })
 
-ControlGroup:AddButton({
-    Text = "Restart Aimbot",
-    Func = function()
+ControlSection:Button({
+    Name = "Restart Aimbot",
+    Callback = function()
         AimbotModule.Restart()
         Library:Notify({
-            Title = "Aimbot Restarted",
-            Description = "Aimbot module has been restarted!",
-            Time = 3,
+            Name = "Aimbot Restarted",
+            Text = "Aimbot module has been restarted!",
+            Icon = "rbxassetid://11401835376",
+            Duration = 3,
         })
     end,
-    Tooltip = "Restart the aimbot module",
 })
 
-ControlGroup:AddButton({
-    Text = "Get Closest Player",
-    Func = function()
+ControlSection:Button({
+    Name = "Get Closest Player",
+    Callback = function()
         local closest = AimbotModule.GetClosestPlayer()
         if closest then
             Library:Notify({
-                Title = "Closest Player Found",
-                Description = "Closest Player: " .. closest.Name,
-                Time = 3,
+                Name = "Closest Player Found",
+                Text = "Closest Player: " .. closest.Name,
+                Icon = "rbxassetid://11401835376",
+                Duration = 3,
             })
         else
             Library:Notify({
-                Title = "No Target Found",
-                Description = "No player found in FOV range",
-                Time = 2,
+                Name = "No Target Found",
+                Text = "No player found in FOV range",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         end
     end,
-    Tooltip = "Find the closest player to your crosshair",
 })
 
--- UI Settings Tab (from Obsidian example)
-local MenuGroup = Tabs["UI Settings"]:AddLeftGroupbox("Menu", "wrench")
+-- Silent Aim Settings
+local SilentAimSettings = {
+    Enabled = false,
+    TeamCheck = false,
+    VisibleCheck = false,
+    TargetPart = "HumanoidRootPart",
+    SilentAimMethod = "Raycast",
 
-MenuGroup:AddToggle("KeybindMenuOpen", {
-    Default = Library.KeybindFrame.Visible,
-    Text = "Open Keybind Menu",
-    Callback = function(value)
-        Library.KeybindFrame.Visible = value
-    end,
+    FOVRadius = 130,
+    FOVVisible = false,
+    ShowSilentAimTarget = false,
+
+    MouseHitPrediction = false,
+    MouseHitPredictionAmount = 0.165,
+    HitChance = 100
+}
+
+-- Silent Aim Tab Implementation
+local SilentAimMainSection = SilentAimTab:Section({
+    Name = "Silent Aim Settings"
 })
 
-MenuGroup:AddToggle("ShowCustomCursor", {
-    Text = "Custom Cursor",
-    Default = true,
+SilentAimMainSection:Toggle({
+    Name = "Enable Silent Aim",
+    Default = SilentAimSettings.Enabled,
     Callback = function(Value)
-        Library.ShowCustomCursor = Value
+        SilentAimSettings.Enabled = Value
+        if Value then
+            Library:Notify({
+                Name = "Silent Aim Enabled",
+                Text = "Silent Aim is now active",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
+            })
+        else
+            Library:Notify({
+                Name = "Silent Aim Disabled",
+                Text = "Silent Aim is now inactive",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
+            })
+        end
     end,
 })
 
-MenuGroup:AddDropdown("NotificationSide", {
-    Values = { "Left", "Right" },
-    Default = "Right",
-    Text = "Notification Side",
+SilentAimMainSection:Toggle({
+    Name = "Team Check",
+    Default = SilentAimSettings.TeamCheck,
     Callback = function(Value)
-        Library:SetNotifySide(Value)
+        SilentAimSettings.TeamCheck = Value
     end,
 })
 
-MenuGroup:AddDivider()
-
--- Create a dummy toggle for menu keybind (following Obsidian best practices)
-local MenuKeybindToggle = MenuGroup:AddToggle("MenuKeybindToggle", {
-    Text = "Menu Keybind",
-    Default = false,
-    Tooltip = "Toggle to show/hide the menu keybind option",
+SilentAimMainSection:Toggle({
+    Name = "Visible Check",
+    Default = SilentAimSettings.VisibleCheck,
     Callback = function(Value)
-        -- This toggle doesn't need to do anything, it's just for the keybind
+        SilentAimSettings.VisibleCheck = Value
     end,
 })
 
-MenuKeybindToggle:AddKeyPicker("MenuKeybind", {
-    Default = "RightShift",
-    NoUI = true,
-    Text = "Menu keybind",
-    Mode = "Toggle",
-})
-
--- Create cleanup function
-local function cleanupAndUnload()    pcall(function()
-    -- Show notification before unloading
-    Library:Notify({
-        Title = "Unloading GUI",
-        Description = "Cleaning up all objects...",
-        Time = 2,
-    })
-end)
-
-    -- Disable ESP settings to stop render loops
-    ESPSettings.Enabled = false
-
-    -- Use the CleanupESP function to clean up all ESP-related objects and connections
-    CleanupESP()
-
-    -- Disconnect PlayerAdded connection
-    if PlayerAddedConnection and PlayerAddedConnection.Disconnect then
-        pcall(function() PlayerAddedConnection:Disconnect() end)
-        PlayerAddedConnection = nil
-    end
-
-    -- Make sure the aimbot is disabled by setting its Enabled property to false
-    if getgenv().ExunysDeveloperAimbot and getgenv().ExunysDeveloperAimbot.Settings then
-        getgenv().ExunysDeveloperAimbot.Settings.Enabled = false
-    end
-
-    -- Clean up aimbot and FOV circles properly
-    local AimbotEnvironment = getgenv().ExunysDeveloperAimbot
-    if AimbotEnvironment then
-        -- Clean up FOV circles manually first (extra safety)
-        pcall(function()
-            if AimbotEnvironment.FOVCircle and AimbotEnvironment.FOVCircle.Remove then
-                AimbotEnvironment.FOVCircle:Remove()
-            end
-        end)
-        pcall(function()
-            if AimbotEnvironment.FOVCircleOutline and AimbotEnvironment.FOVCircleOutline.Remove then
-                AimbotEnvironment.FOVCircleOutline:Remove()
-            end
-        end)
-
-        -- Call the proper Exit method
-        pcall(function()
-            AimbotEnvironment:Exit()
-        end)
-    end
-
-    -- Also try the module Exit method as backup
-    if AimbotModule and AimbotModule.Exit then
-        pcall(function() AimbotModule:Exit() end)
-    end
-
-    -- Mark aimbot as unloaded
-    if AimbotModule then
-        AimbotModule.Loaded = false
-    end
-
-    -- Clear global variables
-    if getgenv().SelectedPlayer then
-        getgenv().SelectedPlayer = nil
-    end
-    if getgenv().ExunysDeveloperAimbot then
-        getgenv().ExunysDeveloperAimbot = nil
-    end
-
-    -- Small delay then unload
-    task.wait(0.5)
-    Library:Unload()
-end
-
--- Create toggle for unload keybind
-local UnloadKeybindToggle = MenuGroup:AddToggle("UnloadKeybindToggle", {
-    Text = "Unload Keybind",
-    Default = false,
-    Tooltip = "Toggle to show/hide the unload keybind option",
+SilentAimMainSection:Dropdown({
+    Name = "Target Part",
+    Items = { "Head", "HumanoidRootPart", "Torso", "UpperTorso", "LowerTorso", "Random" },
     Callback = function(Value)
-        -- This toggle doesn't need to do anything, it's just for the keybind
+        SilentAimSettings.TargetPart = Value
     end,
 })
 
-UnloadKeybindToggle:AddKeyPicker("UnloadKeybind", {
-    Default = "End",
-    NoUI = true,
-    Text = "Unload GUI keybind",
-    Mode = "Toggle",
-    Callback = function()
-        cleanupAndUnload()
-    end
-})
-
-MenuGroup:AddButton({
-    Text = "Unload GUI",
-    Func = function()
-        cleanupAndUnload()
+SilentAimMainSection:Dropdown({
+    Name = "Silent Aim Method",
+    Items = {
+        "Raycast",
+        "FindPartOnRay",
+        "FindPartOnRayWithWhitelist",
+        "FindPartOnRayWithIgnoreList",
+        "Mouse.Hit/Target"
+    },
+    Callback = function(Value)
+        SilentAimSettings.SilentAimMethod = Value
     end,
-    Tooltip = "Manually unload the GUI and clean up all objects",
 })
 
-Library.ToggleKeybind = Options.MenuKeybind
+SilentAimMainSection:Slider({
+    Name = "Hit Chance (%)",
+    Max = 100,
+    Min = 0,
+    Default = SilentAimSettings.HitChance,
+    Callback = function(Value)
+        SilentAimSettings.HitChance = Value
+    end,
+})
 
--- Setup managers
-ThemeManager:SetLibrary(Library)
-SaveManager:SetLibrary(Library)
+-- FOV Settings for Silent Aim
+local SilentAimFOVSection = SilentAimTab:Section({
+    Name = "FOV Settings"
+})
 
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({ "MenuKeybind" })
+SilentAimFOVSection:Toggle({
+    Name = "Show FOV Circle",
+    Default = SilentAimSettings.FOVVisible,
+    Callback = function(Value)
+        SilentAimSettings.FOVVisible = Value
+    end,
+})
 
-ThemeManager:SetFolder("AimbotScript")
-SaveManager:SetFolder("AimbotScript/configs")
+SilentAimFOVSection:Slider({
+    Name = "FOV Circle Radius",
+    Max = 500,
+    Min = 10,
+    Default = SilentAimSettings.FOVRadius,
+    Callback = function(Value)
+        SilentAimSettings.FOVRadius = Value
+    end,
+})
 
-SaveManager:BuildConfigSection(Tabs["UI Settings"])
-ThemeManager:ApplyToTab(Tabs["UI Settings"])
+SilentAimFOVSection:Toggle({
+    Name = "Show Silent Aim Target",
+    Default = SilentAimSettings.ShowSilentAimTarget,
+    Callback = function(Value)
+        SilentAimSettings.ShowSilentAimTarget = Value
+    end,
+})
 
--- Initialize the aimbot
-AimbotModule.Load()
-AimbotModule.Loaded = true
+SilentAimFOVSection:Colorpicker({
+    Name = "FOV Circle Color",
+    DefaultColor = Color3.fromRGB(54, 57, 241),
+    Callback = function(Color)
+        -- Update FOV circle color
+    end,
+})
 
--- Auto-load config
-SaveManager:LoadAutoloadConfig()
+SilentAimFOVSection:Colorpicker({
+    Name = "Target Indicator Color",
+    DefaultColor = Color3.fromRGB(54, 57, 241),
+    Callback = function(Color)
+        -- Update target indicator color
+    end,
+})
 
--- Cleanup function
-Library:OnUnload(function()
-    print("Starting GUI cleanup...")
+-- Prediction Settings for Silent Aim
+local SilentAimPredictionSection = SilentAimTab:Section({
+    Name = "Prediction Settings"
+})
 
-    -- Also clean up Off-Screen Arrow objects and connections (Made by Blissful#4992)
-    for playerName, connection in pairs(OffScreenArrowConnections) do
-        if connection and connection.Disconnect then
-            pcall(function() connection:Disconnect() end)
-        end
-    end
-    for playerName, arrow in pairs(OffScreenArrowObjects) do
-        if arrow and arrow.Remove then
-            pcall(function() arrow:Remove() end)
-        end
-    end
+SilentAimPredictionSection:Toggle({
+    Name = "Mouse.Hit/Target Prediction",
+    Default = SilentAimSettings.MouseHitPrediction,
+    Callback = function(Value)
+        SilentAimSettings.MouseHitPrediction = Value
+    end,
+})
 
-    -- Clean up Radar objects and connections (Made by Blissful#4992)
-    for key, connection in pairs(RadarConnections) do
-        if connection and connection.Disconnect then
-            pcall(function() connection:Disconnect() end)
-        end
-    end
-    for key, obj in pairs(RadarObjects) do
-        if obj and obj.Remove then
-            pcall(function() obj:Remove() end)
-        end
-    end
-
-    -- Disable ESP settings to stop render loops
-    ESPSettings.Enabled = false
-
-    -- Disconnect all ESP connections
-    for playerName, connection in pairs(ESPConnections) do
-        if connection and connection.Disconnect then
-            pcall(function() connection:Disconnect() end)
-        end
-    end
-    ESPConnections = {}
-
-    -- Disconnect all Skeleton ESP connections
-    for connectionKey, connection in pairs(SkeletonESPConnections) do
-        if connection and connection.Disconnect then
-            pcall(function() connection:Disconnect() end)
-        end
-    end
-    SkeletonESPConnections = {}
-
-    -- Disconnect all Off-Screen Arrow connections (Made by Blissful#4992)
-    for playerName, connection in pairs(OffScreenArrowConnections) do
-        if connection and connection.Disconnect then
-            pcall(function() connection:Disconnect() end)
-        end
-    end
-    OffScreenArrowConnections = {}
-
-    -- Disconnect all Radar connections (Made by Blissful#4992)
-    for key, connection in pairs(RadarConnections) do
-        if connection and connection.Disconnect then
-            pcall(function() connection:Disconnect() end)
-        end
-    end
-    RadarConnections = {}
-
-    -- Disconnect PlayerAdded connection
-    if PlayerAddedConnection and PlayerAddedConnection.Disconnect then
-        pcall(function() PlayerAddedConnection:Disconnect() end)
-        PlayerAddedConnection = nil
-    end
-
-    -- Clean up ESP objects
-    for playerName, espLib in pairs(ESPObjects) do
-        for _, obj in pairs(espLib) do
-            if obj and obj.Remove then
-                pcall(function() obj:Remove() end)
-            end
-        end
-    end
-    ESPObjects = {}
-
-    -- Clean up Skeleton ESP objects
-    for playerName, skelLib in pairs(SkeletonESPObjects) do
-        for _, obj in pairs(skelLib) do
-            if obj and obj.Remove then
-                pcall(function() obj:Remove() end)
-            end
-        end
-    end
-    SkeletonESPObjects = {}
-
-    -- Make sure the aimbot is disabled by setting its Enabled property to false
-    if getgenv().ExunysDeveloperAimbot and getgenv().ExunysDeveloperAimbot.Settings then
-        getgenv().ExunysDeveloperAimbot.Settings.Enabled = false
-    end
-
-    -- Clean up aimbot and FOV circles properly
-    local AimbotEnvironment = getgenv().ExunysDeveloperAimbot
-    if AimbotEnvironment then
-        -- Clean up FOV circles manually first (extra safety)
-        pcall(function()
-            if AimbotEnvironment.FOVCircle and AimbotEnvironment.FOVCircle.Remove then
-                AimbotEnvironment.FOVCircle:Remove()
-            end
-        end)
-        pcall(function()
-            if AimbotEnvironment.FOVCircleOutline and AimbotEnvironment.FOVCircleOutline.Remove then
-                AimbotEnvironment.FOVCircleOutline:Remove()
-            end
-        end)
-
-        -- Call the proper Exit method
-        pcall(function()
-            AimbotEnvironment:Exit()
-        end)
-    end
-
-    -- Also try the module Exit method as backup
-    if AimbotModule and AimbotModule.Exit then
-        pcall(function() AimbotModule:Exit() end)
-    end
-
-    -- Mark aimbot as unloaded
-    if AimbotModule then
-        AimbotModule.Loaded = false
-    end
-
-    -- Clear global variables
-    if getgenv().SelectedPlayer then
-        getgenv().SelectedPlayer = nil
-    end
-    if getgenv().ExunysDeveloperAimbot then
-        getgenv().ExunysDeveloperAimbot = nil
-    end
-
-    print("GUI completely unloaded and cleaned up!")
-end)
+SilentAimPredictionSection:Slider({
+    Name = "Prediction Amount",
+    Max = 1,
+    Min = 0.001,
+    Default = SilentAimSettings.MouseHitPredictionAmount,
+    Callback = function(Value)
+        SilentAimSettings.MouseHitPredictionAmount = Value
+    end,
+})
 
 -- Sweat Tab
--- Only keeping Stretch Resolution and FOV Changer features
-local SweatAdvancedGroup = Tabs.Sweat:AddRightGroupbox("Sweat Settings", "settings")
+local SweatAdvancedSection = SweatTab:Section({
+    Name = "Sweat Settings"
+})
 
--- Create a separate groupbox for Low Graphics
-local LowGraphicsGroup = Tabs.Sweat:AddLeftGroupbox("Low Graphics Settings", "image")
+-- Create a separate section for Low Graphics
+local LowGraphicsSection = SweatTab:Section({
+    Name = "Low Graphics Settings"
+})
 
--- Add Low Graphics toggle to its own groupbox
-LowGraphicsGroup:AddToggle("LowGraphics", {
-    Text = "Enable Low Graphics",
+-- Add Low Graphics toggle to its own section
+LowGraphicsSection:Toggle({
+    Name = "Enable Low Graphics",
     Default = false,
     Callback = function(Value)
         if Value then
@@ -3288,9 +2336,10 @@ LowGraphicsGroup:AddToggle("LowGraphics", {
             end
 
             Library:Notify({
-                Title = "Low Graphics Enabled",
-                Description = "Low graphics mode is now active",
-                Time = 2,
+                Name = "Low Graphics Enabled",
+                Text = "Low graphics mode is now active",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         else
             -- Restore original materials if available
@@ -3303,17 +2352,18 @@ LowGraphicsGroup:AddToggle("LowGraphics", {
             end
 
             Library:Notify({
-                Title = "Low Graphics Disabled",
-                Description = "Low graphics mode is now inactive",
-                Time = 2,
+                Name = "Low Graphics Disabled",
+                Text = "Low graphics mode is now inactive",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         end
     end,
 })
 
 -- Stretch Resolution
-SweatAdvancedGroup:AddToggle("StretchResolution", {
-    Text = "Enable Stretch Resolution",
+SweatAdvancedSection:Toggle({
+    Name = "Enable Stretch Resolution",
     Default = false,
     Callback = function(Value)
         if Value then
@@ -3324,18 +2374,19 @@ SweatAdvancedGroup:AddToggle("StretchResolution", {
 
             if getgenv().gg_scripters == nil then
                 game:GetService("RunService").RenderStepped:Connect(
-                    function()
-                        local Camera = workspace.CurrentCamera
-                        Camera.CFrame = Camera.CFrame * CFrame.new(0, 0, 0, 1, 0, 0, 0, getgenv().Resolution[".gg/scripters"], 0, 0, 0, 1)
-                    end
+                        function()
+                            local Camera = workspace.CurrentCamera
+                            Camera.CFrame = Camera.CFrame * CFrame.new(0, 0, 0, 1, 0, 0, 0, getgenv().Resolution[".gg/scripters"], 0, 0, 0, 1)
+                        end
                 )
             end
             getgenv().gg_scripters = "Aori0001"
 
             Library:Notify({
-                Title = "Stretch Resolution Enabled",
-                Description = "Stretch resolution is now active",
-                Time = 2,
+                Name = "Stretch Resolution Enabled",
+                Text = "Stretch resolution is now active",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         else
             -- Disable stretch resolution (reset to default)
@@ -3344,30 +2395,34 @@ SweatAdvancedGroup:AddToggle("StretchResolution", {
             end
 
             Library:Notify({
-                Title = "Stretch Resolution Disabled",
-                Description = "Stretch resolution is now inactive",
-                Time = 2,
+                Name = "Stretch Resolution Disabled",
+                Text = "Stretch resolution is now inactive",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         end
     end,
 })
 
-SweatAdvancedGroup:AddSlider("StretchAmount", {
-    Text = "Stretch Amount",
-    Default = 0.65,
-    Min = 0.1,
-    Max = 1,
-    Rounding = 2,
+SweatAdvancedSection:Slider({
+    Name = "Stretch Amount",
+    Max = 10,
+    Min = 1,
+    Default = 5,
     Callback = function(Value)
         if getgenv().Resolution then
-            getgenv().Resolution[".gg/scripters"] = Value
+            -- Convert from 1-10 scale to 1-0.1 scale (inverted)
+            -- 1 on slider = 1 (no stretch)
+            -- 10 on slider = 0.1 (maximum stretch)
+            local stretchValue = 1 - (Value - 1) / 9 * 0.9
+            getgenv().Resolution[".gg/scripters"] = stretchValue
         end
     end,
 })
 
 -- FOV Changer
-SweatAdvancedGroup:AddToggle("FOVChanger", {
-    Text = "Enable FOV Changer",
+SweatAdvancedSection:Toggle({
+    Name = "Enable FOV Changer",
     Default = false,
     Callback = function(Value)
         if Value then
@@ -3377,12 +2432,13 @@ SweatAdvancedGroup:AddToggle("FOVChanger", {
             end
 
             -- Set FOV to the value from the slider or default to 120
-            workspace.Camera.FieldOfView = Options.FOVValue and Options.FOVValue.Value or 120
+            workspace.Camera.FieldOfView = 120
 
             Library:Notify({
-                Title = "FOV Changer Enabled",
-                Description = "FOV changer is now active",
-                Time = 2,
+                Name = "FOV Changer Enabled",
+                Text = "FOV changer is now active",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         else
             -- Restore original FOV
@@ -3391,43 +2447,43 @@ SweatAdvancedGroup:AddToggle("FOVChanger", {
             end
 
             Library:Notify({
-                Title = "FOV Changer Disabled",
-                Description = "FOV changer is now inactive",
-                Time = 2,
+                Name = "FOV Changer Disabled",
+                Text = "FOV changer is now inactive",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         end
     end,
 })
 
--- Low Graphics is now in its own groupbox
-
-SweatAdvancedGroup:AddSlider("FOVValue", {
-    Text = "FOV Value",
-    Default = 120,
-    Min = 70,
+SweatAdvancedSection:Slider({
+    Name = "FOV Value",
     Max = 120,
-    Rounding = 0,
+    Min = 70,
+    Default = 120,
     Callback = function(Value)
         -- Only update FOV if FOV Changer is enabled
-        if Toggles.FOVChanger and Toggles.FOVChanger.Value then
-            workspace.Camera.FieldOfView = Value
-        end
+        workspace.Camera.FieldOfView = Value
     end,
 })
 
 -- Movement Tab
-local MovementGroup = Tabs.Movement:AddLeftGroupbox("Movement Features")
-local MovementAdvancedGroup = Tabs.Movement:AddRightGroupbox("Advanced Movement")
+local MovementSection = MovementTab:Section({
+    Name = "Movement Features"
+})
+
+local MovementAdvancedSection = MovementTab:Section({
+    Name = "Advanced Movement"
+})
 
 -- Variables for CFrame Fly
 local CFspeed = 50
 local CFloop = nil
 
 -- CFrame Fly Toggle
-MovementGroup:AddToggle("CFlyEnabled", {
-    Text = "CFrame Fly",
+MovementSection:Toggle({
+    Name = "CFrame Fly",
     Default = false,
-    Tooltip = "Enables CFrame flying (bypasses some anti-cheats)",
     Callback = function(Value)
         if Value then
             -- Enable CFrame Fly
@@ -3452,9 +2508,10 @@ MovementGroup:AddToggle("CFlyEnabled", {
             end)
 
             Library:Notify({
-                Title = "CFrame Fly Enabled",
-                Description = "CFrame flying is now active",
-                Time = 2,
+                Name = "CFrame Fly Enabled",
+                Text = "CFrame flying is now active",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         else
             -- Disable CFrame Fly
@@ -3466,22 +2523,21 @@ MovementGroup:AddToggle("CFlyEnabled", {
                 Head.Anchored = false
 
                 Library:Notify({
-                    Title = "CFrame Fly Disabled",
-                    Description = "CFrame flying is now inactive",
-                    Time = 2,
+                    Name = "CFrame Fly Disabled",
+                    Text = "CFrame flying is now inactive",
+                    Icon = "rbxassetid://11401835376",
+                    Duration = 2,
                 })
             end
         end
     end,
 })
 
--- CFrame Fly Speed Slider
-MovementGroup:AddSlider("CFlySpeed", {
-    Text = "CFrame Fly Speed",
-    Default = 50,
-    Min = 10,
+MovementSection:Slider({
+    Name = "CFrame Fly Speed",
     Max = 200,
-    Rounding = 0,
+    Min = 10,
+    Default = 50,
     Callback = function(Value)
         CFspeed = Value
     end,
@@ -3492,10 +2548,9 @@ local WalkSpeedValue = 16
 local WalkSpeedLoop = nil
 local WalkSpeedCA = nil
 
-MovementGroup:AddToggle("WalkSpeedEnabled", {
-    Text = "Enable WalkSpeed",
+MovementSection:Toggle({
+    Name = "Enable WalkSpeed",
     Default = false,
-    Tooltip = "Changes your character's movement speed",
     Callback = function(Value)
         local player = game.Players.LocalPlayer
         if Value then
@@ -3505,9 +2560,10 @@ MovementGroup:AddToggle("WalkSpeedEnabled", {
             end
 
             Library:Notify({
-                Title = "WalkSpeed Enabled",
-                Description = "WalkSpeed set to " .. WalkSpeedValue,
-                Time = 2,
+                Name = "WalkSpeed Enabled",
+                Text = "WalkSpeed set to " .. WalkSpeedValue,
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         else
             -- Reset walkspeed to default
@@ -3527,37 +2583,34 @@ MovementGroup:AddToggle("WalkSpeedEnabled", {
             end
 
             Library:Notify({
-                Title = "WalkSpeed Disabled",
-                Description = "WalkSpeed reset to default",
-                Time = 2,
+                Name = "WalkSpeed Disabled",
+                Text = "WalkSpeed reset to default",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         end
     end,
 })
 
-MovementGroup:AddSlider("WalkSpeedValue", {
-    Text = "WalkSpeed Value",
-    Default = 16,
-    Min = 16,
+MovementSection:Slider({
+    Name = "WalkSpeed Value",
     Max = 200,
-    Rounding = 0,
+    Min = 16,
+    Default = 16,
     Callback = function(Value)
         WalkSpeedValue = Value
 
         -- Update walkspeed if enabled
-        if Toggles.WalkSpeedEnabled and Toggles.WalkSpeedEnabled.Value then
-            local player = game.Players.LocalPlayer
-            if player.Character and player.Character:FindFirstChildOfClass('Humanoid') then
-                player.Character:FindFirstChildOfClass('Humanoid').WalkSpeed = Value
-            end
+        local player = game.Players.LocalPlayer
+        if player.Character and player.Character:FindFirstChildOfClass('Humanoid') then
+            player.Character:FindFirstChildOfClass('Humanoid').WalkSpeed = Value
         end
     end,
 })
 
-MovementGroup:AddToggle("LoopWalkSpeed", {
-    Text = "Loop WalkSpeed",
+MovementSection:Toggle({
+    Name = "Loop WalkSpeed",
     Default = false,
-    Tooltip = "Continuously sets your walkspeed (prevents games from changing it back)",
     Callback = function(Value)
         local player = game.Players.LocalPlayer
 
@@ -3591,9 +2644,10 @@ MovementGroup:AddToggle("LoopWalkSpeed", {
             end)
 
             Library:Notify({
-                Title = "Loop WalkSpeed Enabled",
-                Description = "Your walkspeed will be maintained at " .. WalkSpeedValue,
-                Time = 2,
+                Name = "Loop WalkSpeed Enabled",
+                Text = "Your walkspeed will be maintained at " .. WalkSpeedValue,
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         else
             -- Disconnect loop
@@ -3608,9 +2662,10 @@ MovementGroup:AddToggle("LoopWalkSpeed", {
             end
 
             Library:Notify({
-                Title = "Loop WalkSpeed Disabled",
-                Description = "WalkSpeed loop stopped",
-                Time = 2,
+                Name = "Loop WalkSpeed Disabled",
+                Text = "WalkSpeed loop stopped",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         end
     end,
@@ -3621,10 +2676,9 @@ local JumpPowerValue = 50
 local JumpPowerLoop = nil
 local JumpPowerCA = nil
 
-MovementGroup:AddToggle("JumpPowerEnabled", {
-    Text = "Enable Jump Power",
+MovementSection:Toggle({
+    Name = "Enable Jump Power",
     Default = false,
-    Tooltip = "Changes how high your character can jump",
     Callback = function(Value)
         local player = game.Players.LocalPlayer
         if Value then
@@ -3638,9 +2692,10 @@ MovementGroup:AddToggle("JumpPowerEnabled", {
             end
 
             Library:Notify({
-                Title = "Jump Power Enabled",
-                Description = "Jump Power set to " .. JumpPowerValue,
-                Time = 2,
+                Name = "Jump Power Enabled",
+                Text = "Jump Power set to " .. JumpPowerValue,
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         else
             -- Reset jump power to default
@@ -3664,107 +2719,31 @@ MovementGroup:AddToggle("JumpPowerEnabled", {
             end
 
             Library:Notify({
-                Title = "Jump Power Disabled",
-                Description = "Jump Power reset to default",
-                Time = 2,
+                Name = "Jump Power Disabled",
+                Text = "Jump Power reset to default",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         end
     end,
 })
 
-MovementGroup:AddSlider("JumpPowerValue", {
-    Text = "Jump Power Value",
-    Default = 50,
-    Min = 50,
+MovementSection:Slider({
+    Name = "Jump Power Value",
     Max = 300,
-    Rounding = 0,
+    Min = 50,
+    Default = 50,
     Callback = function(Value)
         JumpPowerValue = Value
 
         -- Update jump power if enabled
-        if Toggles.JumpPowerEnabled and Toggles.JumpPowerEnabled.Value then
-            local player = game.Players.LocalPlayer
-            if player.Character and player.Character:FindFirstChildOfClass('Humanoid') then
-                if player.Character:FindFirstChildOfClass('Humanoid').UseJumpPower then
-                    player.Character:FindFirstChildOfClass('Humanoid').JumpPower = Value
-                else
-                    player.Character:FindFirstChildOfClass('Humanoid').JumpHeight = Value / 2.5
-                end
-            end
-        end
-    end,
-})
-
-MovementGroup:AddToggle("LoopJumpPower", {
-    Text = "Loop Jump Power",
-    Default = false,
-    Tooltip = "Continuously sets your jump power (prevents games from changing it back)",
-    Callback = function(Value)
         local player = game.Players.LocalPlayer
-
-        if Value then
-            -- Function to set jump power
-            local function UpdateJumpPower()
-                if player.Character and player.Character:FindFirstChildOfClass('Humanoid') then
-                    if player.Character:FindFirstChildOfClass('Humanoid').UseJumpPower then
-                        player.Character:FindFirstChildOfClass('Humanoid').JumpPower = JumpPowerValue
-                    else
-                        player.Character:FindFirstChildOfClass('Humanoid').JumpHeight = JumpPowerValue / 2.5
-                    end
-                end
+        if player.Character and player.Character:FindFirstChildOfClass('Humanoid') then
+            if player.Character:FindFirstChildOfClass('Humanoid').UseJumpPower then
+                player.Character:FindFirstChildOfClass('Humanoid').JumpPower = Value
+            else
+                player.Character:FindFirstChildOfClass('Humanoid').JumpHeight = Value / 2.5
             end
-
-            -- Initial set
-            UpdateJumpPower()
-
-            -- Connect to property changed signal
-            local Human = player.Character and player.Character:FindFirstChildOfClass('Humanoid')
-            if Human then
-                if Human.UseJumpPower then
-                    JumpPowerLoop = Human:GetPropertyChangedSignal("JumpPower"):Connect(UpdateJumpPower)
-                else
-                    JumpPowerLoop = Human:GetPropertyChangedSignal("JumpHeight"):Connect(UpdateJumpPower)
-                end
-            end
-
-            -- Connect to character added
-            JumpPowerCA = player.CharacterAdded:Connect(function(newChar)
-                local newHuman = newChar:WaitForChild("Humanoid")
-                UpdateJumpPower()
-
-                if JumpPowerLoop then
-                    JumpPowerLoop:Disconnect()
-                end
-
-                if newHuman.UseJumpPower then
-                    JumpPowerLoop = newHuman:GetPropertyChangedSignal("JumpPower"):Connect(UpdateJumpPower)
-                else
-                    JumpPowerLoop = newHuman:GetPropertyChangedSignal("JumpHeight"):Connect(UpdateJumpPower)
-                end
-            end)
-
-            Library:Notify({
-                Title = "Loop Jump Power Enabled",
-                Description = "Your jump power will be maintained at " .. JumpPowerValue,
-                Time = 2,
-            })
-        else
-            -- Disconnect loop
-            if JumpPowerLoop then
-                JumpPowerLoop:Disconnect()
-                JumpPowerLoop = nil
-            end
-
-            if JumpPowerCA then
-                JumpPowerCA:Disconnect()
-                JumpPowerCA = nil
-            end
-
-            Library:Notify({
-                Title = "Loop Jump Power Disabled",
-                Description = "Jump Power loop stopped",
-                Time = 2,
-            })
         end
     end,
 })
@@ -3775,10 +2754,9 @@ local floatName = "FloatPart_" .. math.random(1000, 9999)
 local FloatingFunc = nil
 local qUp, eUp, qDown, eDown, floatDied = nil, nil, nil, nil, nil
 
-MovementGroup:AddToggle("FloatEnabled", {
-    Text = "Float/Platform",
+MovementSection:Toggle({
+    Name = "Float/Platform",
     Default = false,
-    Tooltip = "Creates an invisible platform under you (Q = down, E = up)",
     Callback = function(Value)
         Floating = Value
         local player = game.Players.LocalPlayer
@@ -3802,9 +2780,10 @@ MovementGroup:AddToggle("FloatEnabled", {
                     Float.CFrame = getRoot(pchar).CFrame * CFrame.new(0, FloatValue, 0)
 
                     Library:Notify({
-                        Title = "Float Enabled",
-                        Description = "Float platform active (Q = down & E = up)",
-                        Time = 2,
+                        Name = "Float Enabled",
+                        Text = "Float platform active (Q = down & E = up)",
+                        Icon = "rbxassetid://11401835376",
+                        Duration = 2,
                     })
 
                     qUp = game:GetService("UserInputService").InputEnded:Connect(function(input)
@@ -3860,9 +2839,10 @@ MovementGroup:AddToggle("FloatEnabled", {
             end
         else
             Library:Notify({
-                Title = "Float Disabled",
-                Description = "Float platform removed",
-                Time = 2,
+                Name = "Float Disabled",
+                Text = "Float platform removed",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
 
             if pchar:FindFirstChild(floatName) then
@@ -3883,10 +2863,9 @@ MovementGroup:AddToggle("FloatEnabled", {
 local Clip = true
 local Noclipping = nil
 
-MovementAdvancedGroup:AddToggle("NoClipEnabled", {
-    Text = "NoClip",
+MovementAdvancedSection:Toggle({
+    Name = "NoClip",
     Default = false,
-    Tooltip = "Allows you to walk through walls and objects",
     Callback = function(Value)
         local player = game.Players.LocalPlayer
 
@@ -3907,9 +2886,10 @@ MovementAdvancedGroup:AddToggle("NoClipEnabled", {
             Noclipping = game:GetService("RunService").Stepped:Connect(NoclipLoop)
 
             Library:Notify({
-                Title = "NoClip Enabled",
-                Description = "You can now walk through objects",
-                Time = 2,
+                Name = "NoClip Enabled",
+                Text = "You can now walk through objects",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         else
             -- Disable NoClip
@@ -3921,9 +2901,10 @@ MovementAdvancedGroup:AddToggle("NoClipEnabled", {
             Clip = true
 
             Library:Notify({
-                Title = "NoClip Disabled",
-                Description = "NoClip is now inactive",
-                Time = 2,
+                Name = "NoClip Disabled",
+                Text = "NoClip is now inactive",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         end
     end,
@@ -3933,10 +2914,9 @@ MovementAdvancedGroup:AddToggle("NoClipEnabled", {
 local InfiniteJump = false
 local InfiniteJumpConnection = nil
 
-MovementAdvancedGroup:AddToggle("InfiniteJumpEnabled", {
-    Text = "Infinite Jump",
+MovementAdvancedSection:Toggle({
+    Name = "Infinite Jump",
     Default = false,
-    Tooltip = "Allows you to jump infinitely without waiting for cooldown",
     Callback = function(Value)
         InfiniteJump = Value
 
@@ -3952,9 +2932,10 @@ MovementAdvancedGroup:AddToggle("InfiniteJumpEnabled", {
             end)
 
             Library:Notify({
-                Title = "Infinite Jump Enabled",
-                Description = "You can now jump infinitely",
-                Time = 2,
+                Name = "Infinite Jump Enabled",
+                Text = "You can now jump infinitely",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         else
             -- Disable Infinite Jump
@@ -3964,17 +2945,322 @@ MovementAdvancedGroup:AddToggle("InfiniteJumpEnabled", {
             end
 
             Library:Notify({
-                Title = "Infinite Jump Disabled",
-                Description = "Infinite Jump is now inactive",
-                Time = 2,
+                Name = "Infinite Jump Disabled",
+                Text = "Infinite Jump is now inactive",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
             })
         end
     end,
 })
 
+-- UI Settings Tab
+local UISettingsSection = UISettingsTab:Section({
+    Name = "UI Settings"
+})
+
+UISettingsSection:Toggle({
+    Name = "Darkmode",
+    Default = true,
+    Callback = function(Value)
+        if Value then
+            Library:SetTheme({
+                Main = Color3.fromRGB(45, 45, 45),
+                Secondary = Color3.fromRGB(31, 31, 31),
+                Tertiary = Color3.fromRGB(31, 31, 31),
+                Text = Color3.fromRGB(255, 255, 255),
+                PlaceholderText = Color3.fromRGB(175, 175, 175),
+                Textbox = Color3.fromRGB(61, 61, 61),
+                NavBar = Color3.fromRGB(35, 35, 35),
+                Theme = Color3.fromRGB(232, 202, 35),
+            })
+        else
+            Library:SetTheme({
+                Main = Color3.fromRGB(238, 238, 238),
+                Secondary = Color3.fromRGB(194, 194, 194),
+                Tertiary = Color3.fromRGB(163, 163, 163),
+                Text = Color3.fromRGB(0, 0, 0),
+                PlaceholderText = Color3.fromRGB(15, 15, 15),
+                Textbox = Color3.fromRGB(255, 255, 255),
+                NavBar = Color3.fromRGB(239, 239, 239),
+                Theme = Color3.fromRGB(232, 55, 55),
+            })
+        end
+    end,
+})
+
+UISettingsSection:Button({
+    Name = "Hide UI",
+    Callback = function()
+        Window:Toggled(false)
+        task.wait(3)
+        Window:Toggled(true)
+    end,
+})
+
+UISettingsSection:Button({
+    Name = "Task Bar Only",
+    Callback = function()
+        Window:TaskBarOnly(true)
+        task.wait(3)
+        Window:TaskBarOnly(false)
+    end,
+})
+
+UISettingsSection:Keybind({
+    Name = "Toggle UI Key",
+    Default = Enum.KeyCode.RightShift,
+    Callback = function()
+        -- This will be triggered when the key is pressed
+    end,
+    UpdateKeyCallback = function(Key)
+        Window:ChangeTogglekey(Key)
+    end,
+})
+
+UISettingsSection:Button({
+    Name = "Unload Script",
+    Callback = function()
+        -- Clean up function
+        local function cleanupAndUnload()
+            -- Show notification before unloading
+            Library:Notify({
+                Name = "Unloading GUI",
+                Text = "Cleaning up all objects...",
+                Icon = "rbxassetid://11401835376",
+                Duration = 2,
+            })
+
+            -- Make sure the aimbot is disabled by setting its Enabled property to false
+            if getgenv().ExunysDeveloperAimbot and getgenv().ExunysDeveloperAimbot.Settings then
+                getgenv().ExunysDeveloperAimbot.Settings.Enabled = false
+            end
+
+            -- Clean up aimbot and FOV circles properly
+            local AimbotEnvironment = getgenv().ExunysDeveloperAimbot
+            if AimbotEnvironment then
+                -- Call the proper Exit method
+                pcall(function()
+                    AimbotEnvironment:Exit()
+                end)
+            end
+
+            -- Also try the module Exit method as backup
+            if AimbotModule and AimbotModule.Exit then
+                pcall(function() AimbotModule:Exit() end)
+            end
+
+            -- Mark aimbot as unloaded
+            if AimbotModule then
+                AimbotModule.Loaded = false
+            end
+
+            -- Clear global variables
+            if getgenv().SelectedPlayer then
+                getgenv().SelectedPlayer = nil
+            end
+            if getgenv().ExunysDeveloperAimbot then
+                getgenv().ExunysDeveloperAimbot = nil
+            end
+
+            -- Small delay then unload
+            task.wait(0.5)
+            Library:Destroy()
+        end
+
+        cleanupAndUnload()
+    end,
+})
+
+-- Silent Aim FOV Circle Implementation
+local silent_fov_circle = nil
+
+-- Function to create or recreate the FOV circle
+local function CreateSilentAimFOVCircle()
+    -- Clean up existing circle if it exists
+    if silent_fov_circle and silent_fov_circle.Remove then
+        pcall(function() silent_fov_circle:Remove() end)
+    end
+
+    -- Check if Drawing library is available
+    if not DrawingAvailable or not DrawingLib then
+        warn("Drawing library not available for FOV circle")
+        return
+    end
+
+    -- Create FOV circle
+    silent_fov_circle = DrawingLib.new("Circle")
+    silent_fov_circle.Thickness = 1
+    silent_fov_circle.NumSides = 100
+    silent_fov_circle.Radius = SilentAimSettings.FOVRadius
+    silent_fov_circle.Filled = false
+    silent_fov_circle.Visible = SilentAimSettings.FOVVisible
+    silent_fov_circle.ZIndex = 999
+    silent_fov_circle.Transparency = 1
+    silent_fov_circle.Color = Color3.fromRGB(54, 57, 241)
+
+    -- Set initial position to mouse position for consistency
+    local success, mousePos = pcall(function()
+        return game:GetService("UserInputService"):GetMouseLocation()
+    end)
+
+    if success and mousePos then
+        silent_fov_circle.Position = mousePos
+    else
+        -- Fallback to center of screen if getting mouse position fails
+        silent_fov_circle.Position = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+    end
+end
+
+-- Create the FOV circle initially
+CreateSilentAimFOVCircle()
+
+-- Update FOV circle when settings change
+SilentAimFOVSection:Toggle({
+    Name = "Show FOV Circle",
+    Default = SilentAimSettings.FOVVisible,
+    Callback = function(Value)
+        SilentAimSettings.FOVVisible = Value
+
+        -- Try to update existing FOV circle
+        if silent_fov_circle then
+            silent_fov_circle.Visible = Value
+        end
+
+        -- If FOV circle doesn't exist or is invalid, recreate it
+        if not silent_fov_circle or not pcall(function() return silent_fov_circle.Visible end) then
+            CreateSilentAimFOVCircle()
+        end
+    end,
+})
+
+SilentAimFOVSection:Slider({
+    Name = "FOV Circle Radius",
+    Max = 500,
+    Min = 10,
+    Default = SilentAimSettings.FOVRadius,
+    Callback = function(Value)
+        SilentAimSettings.FOVRadius = Value
+
+        -- Try to update existing FOV circle
+        if silent_fov_circle then
+            silent_fov_circle.Radius = Value
+        end
+
+        -- If FOV circle doesn't exist or is invalid, recreate it
+        if not silent_fov_circle or not pcall(function() return silent_fov_circle.Radius end) then
+            CreateSilentAimFOVCircle()
+        end
+    end,
+})
+
+SilentAimFOVSection:Colorpicker({
+    Name = "FOV Circle Color",
+    DefaultColor = Color3.fromRGB(54, 57, 241),
+    Callback = function(Color)
+        -- Try to update existing FOV circle
+        if silent_fov_circle then
+            silent_fov_circle.Color = Color
+        end
+
+        -- If FOV circle doesn't exist or is invalid, recreate it
+        if not silent_fov_circle or not pcall(function() return silent_fov_circle.Color end) then
+            CreateSilentAimFOVCircle()
+        end
+    end,
+})
+
+-- Set up a RenderStepped connection to update the FOV circle position
+local fovCircleUpdateConnection = game:GetService("RunService").RenderStepped:Connect(function()
+    -- Use pcall to catch any errors and prevent the connection from breaking
+    local success, err = pcall(function()
+        if silent_fov_circle and SilentAimSettings.FOVVisible then
+            -- Get current mouse position using UserInputService for better accuracy
+            local mouseSuccess, mousePos = pcall(function()
+                return game:GetService("UserInputService"):GetMouseLocation()
+            end)
+
+            if mouseSuccess and mousePos then
+                -- Update FOV circle position
+                silent_fov_circle.Position = mousePos
+                silent_fov_circle.Visible = true
+            else
+                -- Fallback to center of screen if getting mouse position fails
+                silent_fov_circle.Position = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+                silent_fov_circle.Visible = true
+            end
+        elseif silent_fov_circle then
+            silent_fov_circle.Visible = false
+        end
+    end)
+
+    -- If there's an error, try to recreate the FOV circle
+    if not success and err then
+        warn("FOV Circle update error:", err)
+        pcall(function() CreateSilentAimFOVCircle() end)
+    end
+end)
+
+-- Set up a heartbeat connection to monitor and maintain the FOV circle
+local heartbeatConnection = game:GetService("RunService").Heartbeat:Connect(function()
+    pcall(function()
+        -- Check if the FOV circle is still valid
+        if not silent_fov_circle or not pcall(function() return silent_fov_circle.Visible end) then
+            -- Recreate the FOV circle if it's invalid
+            CreateSilentAimFOVCircle()
+            return
+        end
+
+        -- Double-check that the FOV circle is following the mouse when it should
+        if silent_fov_circle and SilentAimSettings.FOVVisible and silent_fov_circle.Visible then
+            local mouseSuccess, mousePos = pcall(function()
+                return game:GetService("UserInputService"):GetMouseLocation()
+            end)
+
+            if mouseSuccess and mousePos then
+                -- If the circle position is significantly different from mouse position, update it
+                local distance = (silent_fov_circle.Position - mousePos).Magnitude
+                if distance > 5 then -- Allow small differences due to timing
+                    silent_fov_circle.Position = mousePos
+                end
+            end
+        end
+    end)
+end)
+
+-- Add cleanup for FOV circle to the unload function
+local originalCleanupAndUnload = cleanupAndUnload
+cleanupAndUnload = function()
+    -- Clean up FOV circle
+    if silent_fov_circle and silent_fov_circle.Remove then
+        pcall(function() silent_fov_circle:Remove() end)
+        silent_fov_circle = nil
+    end
+
+    -- Disconnect update connection
+    if fovCircleUpdateConnection then
+        fovCircleUpdateConnection:Disconnect()
+        fovCircleUpdateConnection = nil
+    end
+
+    -- Disconnect heartbeat connection
+    if heartbeatConnection then
+        heartbeatConnection:Disconnect()
+        heartbeatConnection = nil
+    end
+
+    -- Call original cleanup function
+    originalCleanupAndUnload()
+end
+
+-- Initialize the aimbot
+AimbotModule.Load()
+AimbotModule.Loaded = true
+
 -- Welcome notification
 Library:Notify({
-    Title = "Universal Aimbot",
-    Description = "Aimbot script loaded successfully!\nUse " .. tostring(Options.TriggerKey and Options.TriggerKey.Value or "Right Mouse") .. " to aim.",
-    Time = 5,
+    Name = "Universal Aimbot",
+    Text = "Aimbot script loaded successfully!",
+    Icon = "rbxassetid://11401835376",
+    Duration = 5,
 })
