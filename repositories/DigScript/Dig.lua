@@ -23,13 +23,21 @@ local autoDigEnabled = false
 local autoSellInventoryEnabled = false
 local autoSellItemEnabled = false
 local autoWalkEnabled = false
+local hoverEnabled = false
 local autoEquipConnection = nil
 local autoDigConnection = nil
 local autoSellItemConnection = nil
 local autoWalkConnection = nil
+local hoverConnection = nil
 local updatePositionConnection = nil -- For teleport tab position tracking
 local selectedNPC = nil -- Variable for Teleport tab
 local lastDigPosition = nil -- For auto walk functionality
+
+-- Hover system variables
+local hoverHeight = 5 -- Height in studs to hover above ground
+local originalWalkSpeed = 16 -- Store original walkspeed
+local bodyPosition = nil -- BodyPosition object for hovering
+local bodyVelocity = nil -- BodyVelocity for smooth movement
 
 -- Create Window
 local Window = Library:CreateWindow({
@@ -46,6 +54,7 @@ local Tabs = {
 	Sell = Window:AddTab("Sell", "dollar-sign"),
 	Teleport = Window:AddTab("Teleport", "map-pin"),
 	Quest = Window:AddTab("Quest", "scroll"),
+	Boss = Window:AddTab("Boss", "skull"),
 	["UI Settings"] = Window:AddTab("UI Settings", "settings"),
 }
 
@@ -1442,6 +1451,236 @@ IslandsBox:AddButton({
 })
 
 
+
+-- Boss Teleport groupbox
+local BossBox = Tabs.Teleport:AddLeftGroupbox("Boss Teleport", "skull")
+
+-- Variables for Boss tab
+local selectedBoss = nil
+
+-- Function to teleport to boss spawns
+local function teleportToBoss(bossName)
+    if not bossName then return end
+    
+    pcall(function()
+        local character = LocalPlayer.Character
+        local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+        if not humanoidRootPart then 
+            print("⚠️ No HumanoidRootPart found")
+            return 
+        end
+        
+        print("🔍 Searching for boss: " .. bossName)
+        
+        -- Look in workspace.Spawns.BossSpawns
+        local spawns = workspace:FindFirstChild("Spawns")
+        if not spawns then 
+            print("⚠️ Spawns folder not found in workspace")
+            return 
+        end
+        
+        local bossSpawns = spawns:FindFirstChild("BossSpawns")
+        if not bossSpawns then
+            print("⚠️ BossSpawns folder not found in workspace.Spawns")
+            return
+        end
+        
+        print("🔍 Available boss spawn folders:")
+        for _, child in pairs(bossSpawns:GetChildren()) do
+            print("  - " .. child.Name .. " (" .. child.ClassName .. ")")
+        end
+        
+        -- Look for the specific boss folder
+        local bossFolder = bossSpawns:FindFirstChild(bossName)
+        if bossFolder then
+            print("✅ Found boss folder: " .. bossName)
+            print("🔍 Boss folder contents:")
+            for _, child in pairs(bossFolder:GetChildren()) do
+                print("  - " .. child.Name .. " (" .. child.ClassName .. ")")
+            end
+            
+            local targetPart = nil
+            
+            -- Try to find any teleportable part in the boss folder
+            -- This will work even if boss isn't spawned yet, but will work when it spawns
+            local function findBossPart(folder)
+                -- First check if there's a direct Part/MeshPart in the folder
+                for _, child in pairs(folder:GetChildren()) do
+                    if child:IsA("Part") or child:IsA("MeshPart") or child:IsA("SpawnLocation") then
+                        return child
+                    end
+                end
+                
+                -- Check for models that might contain parts
+                for _, child in pairs(folder:GetChildren()) do
+                    if child:IsA("Model") then
+                        -- Look for PrimaryPart first
+                        if child.PrimaryPart then
+                            return child.PrimaryPart
+                        end
+                        
+                        -- Search descendants for any part
+                        for _, descendant in pairs(child:GetDescendants()) do
+                            if descendant:IsA("Part") or descendant:IsA("MeshPart") or descendant:IsA("SpawnLocation") then
+                                return descendant
+                            end
+                        end
+                    end
+                end
+                
+                -- Check all descendants of the folder
+                for _, descendant in pairs(folder:GetDescendants()) do
+                    if descendant:IsA("Part") or descendant:IsA("MeshPart") or descendant:IsA("SpawnLocation") then
+                        return descendant
+                    end
+                end
+                
+                return nil
+            end
+            
+            targetPart = findBossPart(bossFolder)
+            
+            if targetPart then
+                -- Calculate position near the boss spawn
+                local bossCFrame = targetPart.CFrame
+                local teleportCFrame = bossCFrame * CFrame.new(0, 10, 10) -- 10 studs above and away from boss
+                
+                -- Teleport
+                humanoidRootPart.CFrame = teleportCFrame
+                print("💀 Successfully teleported to " .. bossName .. " spawn!")
+                return
+            else
+                print("⚠️ Found " .. bossName .. " folder but no boss parts found (boss may not be spawned)")
+                print("💡 Try again when the boss spawns - the teleport will work then!")
+                
+                -- Try to teleport to the general area using folder position if possible
+                -- Look for ChatLocation or ChatPrefix parts which might indicate spawn area
+                for _, child in pairs(bossFolder:GetChildren()) do
+                    if child.Name == "ChatLocation" and child:IsA("Part") then
+                        local chatCFrame = child.CFrame
+                        local teleportCFrame = chatCFrame * CFrame.new(0, 10, 0)
+                        humanoidRootPart.CFrame = teleportCFrame
+                        print("💀 Teleported to " .. bossName .. " general area (using ChatLocation)")
+                        return
+                    end
+                end
+                
+                return
+            end
+        else
+            print("⚠️ Boss folder not found: " .. bossName)
+        end
+        
+        print("🔍 Searched: workspace.Spawns.BossSpawns")
+    end)
+end
+
+-- Build boss list from the workspace structure shown in image
+local bossList = {
+    "Basilisk",
+    "Candlelight Phantom", 
+    "Fuzzball",
+    "Giant Spider",
+    "King Crab",
+    "Molten Monstrosity"
+}
+
+-- Create dropdown for bosses
+BossBox:AddDropdown("BossDropdown", {
+    Text = "Select Boss",
+    Tooltip = "Choose a boss spawn to teleport to",
+    Values = bossList,
+    Default = 1, -- First boss in the list
+    
+    Callback = function(Value)
+        selectedBoss = Value
+        print("Selected Boss: " .. Value)
+    end
+})
+
+-- Add teleport button for bosses
+BossBox:AddButton({
+    Text = "Teleport to Boss",
+    Func = function()
+        if selectedBoss then
+            teleportToBoss(selectedBoss)
+        else
+            print("⚠️ Please select a boss first")
+        end
+    end,
+    Tooltip = "Teleport to the selected boss spawn area",
+})
+
+-- Important Teleport groupbox
+local ImportantBox = Tabs.Teleport:AddLeftGroupbox("Important", "star")
+
+-- Function to teleport to Merchant Cart
+local function teleportToMerchant()
+    pcall(function()
+        local character = LocalPlayer.Character
+        local humanoidRootPart = character and character:FindFirstChild("HumanoidRootPart")
+        if not humanoidRootPart then 
+            print("⚠️ No HumanoidRootPart found")
+            return 
+        end
+        
+        print("🔍 Searching for Merchant Cart...")
+        
+        -- Look in workspace.World.NPCs for Merchant Cart
+        local world = workspace:FindFirstChild("World")
+        if not world then
+            print("⚠️ World folder not found in workspace")
+            return
+        end
+        
+        local npcs = world:FindFirstChild("NPCs")
+        if not npcs then
+            print("⚠️ NPCs folder not found in World")
+            return
+        end
+        
+        local merchantCart = npcs:FindFirstChild("Merchant Cart")
+        if not merchantCart then
+            print("⚠️ Merchant Cart not found in NPCs")
+            return
+        end
+        
+        print("✅ Found Merchant Cart")
+        
+        -- Find a suitable part to teleport to
+        local targetPart = merchantCart.PrimaryPart or merchantCart:FindFirstChildOfClass("Part") or merchantCart:FindFirstChildOfClass("MeshPart")
+        if not targetPart then
+            -- Search descendants for any part
+            for _, child in pairs(merchantCart:GetDescendants()) do
+                if child:IsA("Part") or child:IsA("MeshPart") or child:IsA("BasePart") then
+                    targetPart = child
+                    break
+                end
+            end
+        end
+        
+        if targetPart then
+            -- Calculate position slightly in front of Merchant Cart
+            local merchantCFrame = targetPart.CFrame
+            local teleportCFrame = merchantCFrame * CFrame.new(0, 0, 5) -- 5 studs in front
+            
+            -- Teleport
+            humanoidRootPart.CFrame = teleportCFrame
+            print("🛒 Successfully teleported to Merchant Cart!")
+        else
+            print("⚠️ Found Merchant Cart but no valid teleport target")
+        end
+    end)
+end
+
+-- Add teleport to merchant button
+ImportantBox:AddButton({
+    Text = "Teleport To Merchant",
+    Func = function()
+        teleportToMerchant()
+    end,
+    Tooltip = "Teleport to the Merchant Cart",
+})
 
 -- OnChanged events for better control
 Toggles.AutoEquipShovel:OnChanged(function()
