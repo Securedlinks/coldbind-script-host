@@ -34,7 +34,7 @@ local Window = Library:CreateWindow({
 	Footer = "Auto Dig & Equip Tools",
 	Icon = 95816097006870,
 	NotifySide = "Right",
-	ShowCustomCursor = true,
+	ShowCustomCursor = false,
 })
 
 -- Create Tabs
