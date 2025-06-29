@@ -809,11 +809,6 @@ end
 -- Create sell groupbox
 local SellGroupBox = Tabs.Sell:AddLeftGroupbox("Sell Functions", "dollar-sign")
 
--- Add Debug Button
-SellGroupBox:AddButton("Debug Remotes", function()
-	debugReplicatedStorage()
-end)
-
 -- Add Auto Sell Inventory Toggle
 SellGroupBox:AddToggle("AutoSellInventory", {
 	Text = "Auto Sell Inventory",
