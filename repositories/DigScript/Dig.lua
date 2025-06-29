@@ -975,14 +975,41 @@ local function teleportToPurchasable(itemName)
                     
                     -- Handle different types of objects
                     if item:IsA("Model") then
-                        -- For models, try PrimaryPart first, then any Part/MeshPart
+                        -- For models, try PrimaryPart first
                         targetPart = item.PrimaryPart
                         if not targetPart then
-                            -- Search for any Part or MeshPart in the model
-                            for _, child in pairs(item:GetDescendants()) do
-                                if child:IsA("Part") or child:IsA("MeshPart") then
-                                    targetPart = child
-                                    break
+                            -- AGGRESSIVE SEARCH: Search through ALL descendants for ANY teleportable part
+                            local function findAnyPart(obj)
+                                -- Try the object itself first
+                                if obj:IsA("Part") or obj:IsA("MeshPart") or obj:IsA("BasePart") or obj:IsA("SpawnLocation") then
+                                    return obj
+                                end
+                                
+                                -- Search all descendants
+                                for _, descendant in pairs(obj:GetDescendants()) do
+                                    if descendant:IsA("Part") or descendant:IsA("MeshPart") or descendant:IsA("BasePart") or descendant:IsA("SpawnLocation") then
+                                        return descendant
+                                    end
+                                end
+                                
+                                return nil
+                            end
+                            
+                            targetPart = findAnyPart(item)
+                            
+                            -- If still nothing found, try to get position from the model itself
+                            if not targetPart then
+                                -- Check if the model has a CFrame we can use
+                                local success, modelCFrame = pcall(function()
+                                    return item:GetBoundingBox()
+                                end)
+                                
+                                if success and modelCFrame then
+                                    -- Create a virtual teleport position using the model's bounding box
+                                    local teleportCFrame = modelCFrame * CFrame.new(0, 0, 5)
+                                    humanoidRootPart.CFrame = teleportCFrame
+                                    print("🛒 Teleported to " .. itemName .. " (using model bounding box)")
+                                    return
                                 end
                             end
                         end
@@ -992,7 +1019,7 @@ local function teleportToPurchasable(itemName)
                     else
                         -- For other types, search for any Part/MeshPart descendant
                         for _, child in pairs(item:GetDescendants()) do
-                            if child:IsA("Part") or child:IsA("MeshPart") then
+                            if child:IsA("Part") or child:IsA("MeshPart") or child:IsA("BasePart") then
                                 targetPart = child
                                 break
                             end
@@ -1006,10 +1033,14 @@ local function teleportToPurchasable(itemName)
                         
                         -- Teleport
                         humanoidRootPart.CFrame = teleportCFrame
-                        print("🛒 Teleported to " .. itemName .. " (found as " .. item.ClassName .. ")")
+                        print("🛒 Teleported to " .. itemName .. " (found as " .. item.ClassName .. " using " .. targetPart.ClassName .. ")")
                         return
                     else
                         print("⚠️ Found " .. itemName .. " but no valid teleport target (no parts found)")
+                        print("🔍 " .. itemName .. " children:")
+                        for _, child in pairs(item:GetChildren()) do
+                            print("  - " .. child.Name .. " (" .. child.ClassName .. ")")
+                        end
                         return
                     end
                 end
