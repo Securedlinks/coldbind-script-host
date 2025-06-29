@@ -22,17 +22,20 @@ local autoEquipEnabled = false
 local autoDigEnabled = false
 local autoSellInventoryEnabled = false
 local autoSellItemEnabled = false
+local autoWalkEnabled = false
 local autoEquipConnection = nil
 local autoDigConnection = nil
 local autoSellItemConnection = nil
+local autoWalkConnection = nil
 local updatePositionConnection = nil -- For teleport tab position tracking
 local selectedNPC = nil -- Variable for Teleport tab
+local lastDigPosition = nil -- For auto walk functionality
 
 -- Create Window
 local Window = Library:CreateWindow({
 	Title = "COLDBIND",
 	Footer = "Auto Dig & Equip Tools",
-	Icon = 95816097006870,
+	Icon = 128685627581112,
 	NotifySide = "Right",
 	ShowCustomCursor = false,
 })
@@ -42,6 +45,7 @@ local Tabs = {
 	Dig = Window:AddTab("Dig", "pickaxe"),
 	Sell = Window:AddTab("Sell", "dollar-sign"),
 	Teleport = Window:AddTab("Teleport", "map-pin"),
+	Quest = Window:AddTab("Quest", "scroll"),
 	["UI Settings"] = Window:AddTab("UI Settings", "settings"),
 }
 
@@ -518,6 +522,58 @@ local function autoStrongHit()
 	end)
 end
 
+-- Auto Walk Function
+local function autoWalk()
+	if not autoWalkEnabled then return end
+	
+	pcall(function()
+		local character = LocalPlayer.Character
+		if not character then return end
+		
+		local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+		local humanoid = character:FindFirstChild("Humanoid")
+		if not humanoidRootPart or not humanoid then return end
+		
+		-- Check if player finished digging (no dig UI active)
+		local digUI = PlayerGui:FindFirstChild("Dig")
+		if digUI then
+			-- Still digging, save current position as last dig position
+			lastDigPosition = humanoidRootPart.Position
+			return
+		end
+		
+		-- If we just finished digging and have a last dig position, move away from it
+		if lastDigPosition then
+			local currentPosition = humanoidRootPart.Position
+			local distanceFromLastDig = (currentPosition - lastDigPosition).Magnitude
+			
+			-- If we're still close to the last dig spot (within 5 studs), move away
+			if distanceFromLastDig < 5 then
+				-- Generate random walk direction
+				local randomAngle = math.random() * math.pi * 2
+				local walkDistance = math.random(3, 7) -- Random distance between 3-7 studs
+				
+				-- Calculate new position
+				local newPosition = currentPosition + Vector3.new(
+					math.cos(randomAngle) * walkDistance,
+					0,
+					math.sin(randomAngle) * walkDistance
+				)
+				
+				-- Move to new position
+				humanoid:MoveTo(newPosition)
+				print("🚶 Auto Walk: Moving away from dig spot")
+				
+				-- Wait a bit for the movement to complete
+				task.wait(2)
+				
+				-- Clear the last dig position so we don't keep moving
+				lastDigPosition = nil
+			end
+		end
+	end)
+end
+
 -- Add Auto Equip Shovel Toggle
 DigGroupBox:AddToggle("AutoEquipShovel", {
 	Text = "Auto Equip Shovel",
@@ -636,6 +692,38 @@ DigGroupBox:AddToggle("AutoDig", {
 				autoDigConnection:Disconnect()
 				autoDigConnection = nil
 			end
+		end
+	end,
+})
+
+-- Add Auto Walk Toggle
+DigGroupBox:AddToggle("AutoWalk", {
+	Text = "Auto Walk",
+	Tooltip = "Automatically moves player after digging to avoid cooldown",
+	Default = false,
+	
+	Callback = function(Value)
+		autoWalkEnabled = Value
+		
+		if autoWalkEnabled then
+			print("🚶 Auto Walk ENABLED - Will move after digging!")
+			
+			-- Start auto walk loop
+			autoWalkConnection = RunService.Heartbeat:Connect(function()
+				task.wait(1) -- Check every second
+				autoWalk()
+			end)
+		else
+			print("🚶 Auto Walk DISABLED")
+			
+			-- Stop auto walk loop
+			if autoWalkConnection then
+				autoWalkConnection:Disconnect()
+				autoWalkConnection = nil
+			end
+			
+			-- Reset last dig position
+			lastDigPosition = nil
 		end
 	end,
 })
@@ -1017,7 +1105,7 @@ local function teleportToPurchasable(itemName)
                         -- Direct part/meshpart
                         targetPart = item
                     else
-                        -- For other types, search for any Part/MeshPart descendant
+                        -- For other types, search descendants
                         for _, child in pairs(item:GetDescendants()) do
                             if child:IsA("Part") or child:IsA("MeshPart") or child:IsA("BasePart") then
                                 targetPart = child
@@ -1281,7 +1369,7 @@ local function teleportToIsland(islandName)
                         targetPart = child.PrimaryPart
                         if not targetPart then
                             for _, descendant in pairs(child:GetDescendants()) do
-                                if descendant:IsA("Part") or descendant:IsA("MeshPart") or descendant:IsA("SpawnLocation") then
+                                if descendant:IsA("Part") or descendant:IsA("MeshPart") then
                                     targetPart = descendant
                                     break
                                 end
@@ -1380,6 +1468,11 @@ Toggles.AutoSellItem:OnChanged(function()
 	print("Auto Sell Item changed to:", Toggles.AutoSellItem.Value)
 end)
 
+-- Add OnChanged event for Auto Walk toggle
+Toggles.AutoWalk:OnChanged(function()
+	print("Auto Walk changed to:", Toggles.AutoWalk.Value)
+end)
+
 -- UI Settings Tab
 local MenuGroup = Tabs["UI Settings"]:AddLeftGroupbox("Menu", "list")
 
@@ -1391,6 +1484,7 @@ MenuGroup:AddButton({
 		autoSellItemEnabled = false
 		autoEquipEnabled = false
 		autoDigEnabled = false
+		autoWalkEnabled = false
 		
 		if autoEquipConnection then
 			autoEquipConnection:Disconnect()
@@ -1400,6 +1494,9 @@ MenuGroup:AddButton({
 		end
 		if autoSellItemConnection then
 			autoSellItemConnection:Disconnect()
+		end
+		if autoWalkConnection then
+			autoWalkConnection:Disconnect()
 		end
 		
 		print("🔴 COLDBIND Unloaded")
